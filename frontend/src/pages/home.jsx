@@ -102,7 +102,8 @@ function Home() {
   const habitacionesConTour360  = habitaciones.filter(h => h.imagenes?.some(i => i.tipo_imagen === '360')).length;
 
   return (
-    <div className={`min-h-screen bg-brand-sand dark:bg-gray-950 animate-fade-in-soft transition-colors duration-300 ${isDark ? 'dark' : ''}`}>
+    <div className={isDark ? 'dark' : ''}>
+    <div className="min-h-screen bg-brand-sand dark:bg-gray-950 animate-fade-in-soft transition-colors duration-300">
 
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 border-b border-brand-mist dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md animate-fade-up">
@@ -520,6 +521,7 @@ function Home() {
           onSuccess={handleReservaExitosa}
         />
       )}
+    </div>
     </div>
   );
 }

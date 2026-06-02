@@ -25,7 +25,9 @@ const app = express();
 
 const defaultAllowedOrigins = [
   'http://localhost:5173',
-  'hostalsuri.rusoft.dev',
+  'https://hostalsuri.rusoft.dev',
+  'https://rusoft.dev',
+  'https://www.rusoft.dev',
 ];
 
 const envAllowedOrigins = (process.env.CORS_ORIGINS || '')

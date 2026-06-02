@@ -283,8 +283,6 @@ const TourVirtual360 = ({ imagenes360 = [], nombreHabitacion = 'Habitación', on
             defaultZoomLvl={50}
             mousewheel
             touchmoveTwoFingers={false}
-            autorotateDelay={2800}
-            autorotateSpeed="1rpm"
             onReady={() => setCargando(false)}
             container=""
           />

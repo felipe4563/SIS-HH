@@ -117,7 +117,7 @@ const HabitacionCard = ({ habitacion, onReservar }) => {
               </p>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-xl sm:text-2xl font-extrabold text-brand-orange">
+              <p className="text-xl sm:text-2xl font-extrabold text-orange-600 dark:text-[#F0A30A]">
                 Bs. {habitacion.precio_total?.toFixed(2) || '0.00'}
               </p>
               <p className="text-xs text-slate-400 dark:text-gray-500 font-medium">por noche</p>
