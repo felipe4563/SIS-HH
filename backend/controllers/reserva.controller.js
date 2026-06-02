@@ -1,0 +1,686 @@
+import db from '../config/db.js';
+import pricingDinamicoService from '../services/pricingDinamic.service.js';
+
+// ============================================
+// 📌 CREAR RESERVA INDIVIDUAL (CON PRICING DINÁMICO)
+// ============================================
+export const crearReserva = async (req, res) => {
+  const { 
+    id_cliente, 
+    id_habitacion, 
+    fecha_entrada, 
+    fecha_salida,
+    cantidad_adultos,
+    cantidad_ninos,
+    hora_llegada
+  } = req.body;
+
+  try {
+    // Verificar que la habitación existe
+    const [habitacion] = await db.query(
+      'SELECT * FROM habitacion WHERE id_habitacion = ?',
+      [id_habitacion]
+    );
+
+    if (habitacion.length === 0) {
+      return res.status(404).json({ message: 'Habitación no encontrada' });
+    }
+
+    // Verificar disponibilidad
+    const [conflictos] = await db.query(
+      `SELECT COUNT(*) as conflictos
+       FROM reserva
+       WHERE id_habitacion = ?
+         AND estado IN ('pendiente', 'confirmada')
+         AND (
+           (fecha_entrada <= ? AND fecha_salida >= ?) OR
+           (fecha_entrada <= ? AND fecha_salida >= ?) OR
+           (fecha_entrada >= ? AND fecha_salida <= ?)
+         )`,
+      [
+        id_habitacion,
+        fecha_salida, fecha_entrada,
+        fecha_salida, fecha_salida,
+        fecha_entrada, fecha_salida
+      ]
+    );
+
+    if (conflictos[0].conflictos > 0) {
+      return res.status(400).json({ 
+        message: 'La habitación no está disponible para esas fechas' 
+      });
+    }
+
+    // 🎯 CALCULAR PRECIO DINÁMICO
+    const precioCalculado = await pricingDinamicoService.calcularPrecio(
+      id_habitacion,
+      fecha_entrada,
+      fecha_salida,
+      req.ip
+    );
+
+    // Crear la reserva con precio dinámico calculado
+    const [result] = await db.query(
+      `INSERT INTO reserva (
+        id_cliente, 
+        id_habitacion, 
+        fecha_entrada, 
+        fecha_salida, 
+        total, 
+        cantidad_adultos, 
+        cantidad_ninos, 
+        hora_llegada,
+        estado
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')`,
+      [
+        id_cliente, 
+        id_habitacion, 
+        fecha_entrada, 
+        fecha_salida, 
+        precioCalculado.precio_total, // 👈 Precio dinámico
+        cantidad_adultos || 1,
+        cantidad_ninos || 0,
+        hora_llegada || null
+      ]
+    );
+
+    // 📊 Marcar consulta de precio como convertida en reserva
+    await pricingDinamicoService.marcarConsultaConvertida(
+      id_habitacion,
+      fecha_entrada,
+      result.insertId
+    );
+
+    res.status(201).json({
+      message: 'Reserva creada exitosamente',
+      id_reserva: result.insertId,
+      detalles_precio: {
+        precio_base: precioCalculado.precio_base,
+        precio_por_noche: precioCalculado.precio_por_noche,
+        precio_total: precioCalculado.precio_total,
+        noches: precioCalculado.noches,
+        ajustes_aplicados: precioCalculado.ajustes
+      }
+    });
+  } catch (error) {
+    console.error('Error al crear reserva:', error);
+    res.status(500).json({ 
+      message: error.message || 'Error al crear reserva' 
+    });
+  }
+};
+
+// ============================================
+// 📌 CREAR RESERVA MÚLTIPLE (OPTIMIZADO)
+// ============================================
+export const crearReservaMultiple = async (req, res) => {
+  const { 
+    id_cliente, 
+    habitaciones, // Array de { id_habitacion }
+    fecha_entrada, 
+    fecha_salida,
+    cantidad_adultos,
+    cantidad_ninos,
+    hora_llegada
+  } = req.body;
+
+  const connection = await db.getConnection();
+  
+  try {
+    // Iniciar transacción
+    await connection.beginTransaction();
+
+    // 🚀 PASO 1: VERIFICAR TODAS LAS HABITACIONES EN PARALELO
+    const verificacionesPromesas = habitaciones.map(async (hab) => {
+      const { id_habitacion } = hab;
+
+      if (!id_habitacion) {
+        throw new Error('Cada habitación debe tener id_habitacion');
+      }
+
+      // Verificar que la habitación existe
+      const [habitacion] = await connection.query(
+        'SELECT * FROM habitacion WHERE id_habitacion = ?',
+        [id_habitacion]
+      );
+
+      if (habitacion.length === 0) {
+        throw new Error(`Habitación ${id_habitacion} no encontrada`);
+      }
+
+      // Verificar disponibilidad
+      const [conflictos] = await connection.query(
+        `SELECT COUNT(*) as conflictos
+         FROM reserva
+         WHERE id_habitacion = ?
+           AND estado IN ('pendiente', 'confirmada')
+           AND (
+             (fecha_entrada <= ? AND fecha_salida >= ?) OR
+             (fecha_entrada <= ? AND fecha_salida >= ?) OR
+             (fecha_entrada >= ? AND fecha_salida <= ?)
+           )`,
+        [
+          id_habitacion,
+          fecha_salida, fecha_entrada,
+          fecha_salida, fecha_salida,
+          fecha_entrada, fecha_salida
+        ]
+      );
+
+      if (conflictos[0].conflictos > 0) {
+        throw new Error(
+          `La habitación ${habitacion[0].numero} no está disponible para esas fechas`
+        );
+      }
+
+      return { id_habitacion, habitacion: habitacion[0] };
+    });
+
+    const habitacionesVerificadas = await Promise.all(verificacionesPromesas);
+
+    // 🚀 PASO 2: CALCULAR TODOS LOS PRECIOS EN PARALELO
+    const preciosPromesas = habitacionesVerificadas.map(({ id_habitacion }) => 
+      pricingDinamicoService.calcularPrecio(
+        id_habitacion,
+        fecha_entrada,
+        fecha_salida,
+        req.ip
+      )
+    );
+
+    const preciosCalculados = await Promise.all(preciosPromesas);
+
+    // 🚀 PASO 3: CREAR TODAS LAS RESERVAS
+    const reservasCreadas = [];
+    let totalGeneral = 0;
+
+    for (let i = 0; i < habitacionesVerificadas.length; i++) {
+      const { id_habitacion, habitacion } = habitacionesVerificadas[i];
+      const precioCalculado = preciosCalculados[i];
+
+      // Crear la reserva
+      const [result] = await connection.query(
+        `INSERT INTO reserva (
+          id_cliente, 
+          id_habitacion, 
+          fecha_entrada, 
+          fecha_salida, 
+          total, 
+          cantidad_adultos, 
+          cantidad_ninos, 
+          hora_llegada,
+          estado
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pendiente')`,
+        [
+          id_cliente, 
+          id_habitacion, 
+          fecha_entrada, 
+          fecha_salida, 
+          precioCalculado.precio_total,
+          cantidad_adultos || 1,
+          cantidad_ninos || 0,
+          hora_llegada || null
+        ]
+      );
+
+      // 📊 Marcar consulta como convertida (sin await para no bloquear)
+      pricingDinamicoService.marcarConsultaConvertida(
+        id_habitacion,
+        fecha_entrada,
+        result.insertId
+      ).catch(err => console.error('Error marcando consulta:', err));
+
+      totalGeneral += precioCalculado.precio_total;
+
+      reservasCreadas.push({
+        id_reserva: result.insertId,
+        id_habitacion,
+        numero_habitacion: habitacion.numero,
+        precio_base: precioCalculado.precio_base,
+        precio_por_noche: precioCalculado.precio_por_noche,
+        precio_total: precioCalculado.precio_total,
+        noches: precioCalculado.noches,
+        ajustes_aplicados: precioCalculado.ajustes
+      });
+    }
+
+    // Confirmar transacción
+    await connection.commit();
+
+    res.status(201).json({
+      message: 'Reservas creadas exitosamente',
+      cantidad_reservas: reservasCreadas.length,
+      reservas: reservasCreadas,
+      total_general: parseFloat(totalGeneral.toFixed(2)),
+      desglose: {
+        fecha_entrada,
+        fecha_salida,
+        cantidad_adultos,
+        cantidad_ninos
+      }
+    });
+
+  } catch (error) {
+    // Revertir transacción en caso de error
+    await connection.rollback();
+    console.error('Error al crear reservas:', error);
+    res.status(500).json({ 
+      message: error.message || 'Error al crear reservas' 
+    });
+  } finally {
+    connection.release();
+  }
+};
+
+// Obtener reservas del cliente logueado
+export const obtenerMisReservas = async (req, res) => {
+  const id_cliente = req.usuario.id_cliente;
+
+  try {
+    const [reservas] = await db.query(
+      `SELECT 
+        r.*,
+        h.numero as numero_habitacion,
+        t.nombre as tipo_habitacion,
+        t.capacidad as capacidad_habitacion,
+        DATEDIFF(r.fecha_salida, r.fecha_entrada) as noches,
+        (SELECT ruta FROM habitacion_imagen hi WHERE hi.id_habitacion = h.id_habitacion AND hi.tipo_imagen = 'normal' ORDER BY hi.es_portada DESC LIMIT 1) as imagen_portada
+       FROM reserva r
+       INNER JOIN habitacion h ON r.id_habitacion = h.id_habitacion
+       INNER JOIN tipo t ON h.id_tipo = t.id_tipo
+       WHERE r.id_cliente = ?
+       ORDER BY r.fecha_entrada DESC`,
+      [id_cliente]
+    );
+
+    res.json(reservas);
+  } catch (error) {
+    console.error('Error al obtener reservas:', error);
+    res.status(500).json({ message: 'Error al obtener reservas' });
+  }
+};
+
+// Cancelar reserva
+export const cancelarReserva = async (req, res) => {
+  const { id } = req.params;
+  const id_cliente = req.usuario.id_cliente;
+
+  try {
+    // Verificar que la reserva existe y pertenece al cliente
+    const [reserva] = await db.query(
+      'SELECT * FROM reserva WHERE id_reserva = ? AND id_cliente = ?',
+      [id, id_cliente]
+    );
+
+    if (reserva.length === 0) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    if (reserva[0].estado === 'cancelada') {
+      return res.status(400).json({ message: 'La reserva ya está cancelada' });
+    }
+
+    // Cancelar la reserva
+    await db.query(
+      "UPDATE reserva SET estado = 'cancelada' WHERE id_reserva = ?",
+      [id]
+    );
+
+    res.json({ message: 'Reserva cancelada exitosamente' });
+  } catch (error) {
+    console.error('Error al cancelar reserva:', error);
+    res.status(500).json({ message: 'Error al cancelar reserva' });
+  }
+};
+
+// ========================================
+// 👇 FUNCIONES PARA ADMINISTRADORES
+// ========================================
+
+// Obtener TODAS las reservas (admin)
+export const obtenerTodasReservas = async (req, res) => {
+  try {
+    const [reservas] = await db.query(
+      `SELECT 
+        r.*,
+        h.numero as numero_habitacion,
+        t.nombre as tipo_habitacion,
+        c.nombre as nombre_cliente,
+        c.apellido as apellido_cliente,
+        c.ci as ci_cliente,
+        c.correo as correo_cliente,
+        DATEDIFF(r.fecha_salida, r.fecha_entrada) as noches,
+        CONCAT(c.nombre, ' ', c.apellido) as cliente_completo,
+        o.fecha_ingreso as checkin_at
+       FROM reserva r
+       INNER JOIN habitacion h ON r.id_habitacion = h.id_habitacion
+       INNER JOIN tipo t ON h.id_tipo = t.id_tipo
+       INNER JOIN cliente c ON r.id_cliente = c.id_cliente
+       LEFT JOIN ocupacion o ON o.id_reserva = r.id_reserva AND o.fecha_salida IS NULL
+       ORDER BY r.fecha_entrada DESC`
+    );
+
+    res.json(reservas);
+  } catch (error) {
+    console.error('Error al obtener todas las reservas:', error);
+    res.status(500).json({ message: 'Error al obtener reservas' });
+  }
+};
+
+// ============================================
+// ✅ CHECK-IN / CHECK-OUT (ADMIN)
+// ============================================
+
+export const checkInReserva = async (req, res) => {
+  const idReserva = Number(req.params.id);
+  if (!Number.isInteger(idReserva) || idReserva <= 0) {
+    return res.status(400).json({ message: 'ID de reserva inválido' });
+  }
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [reservas] = await connection.query(
+      `SELECT id_reserva, id_habitacion, estado
+       FROM reserva
+       WHERE id_reserva = ?
+       FOR UPDATE`,
+      [idReserva]
+    );
+
+    if (reservas.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    const reserva = reservas[0];
+
+    if (reserva.estado === 'cancelada' || reserva.estado === 'finalizada') {
+      await connection.rollback();
+      return res.status(400).json({ message: `No se puede hacer check-in a una reserva ${reserva.estado}` });
+    }
+
+    const [ocupacionActiva] = await connection.query(
+      `SELECT id_ocupacion, fecha_ingreso
+       FROM ocupacion
+       WHERE id_reserva = ? AND fecha_salida IS NULL
+       LIMIT 1`,
+      [idReserva]
+    );
+
+    if (ocupacionActiva.length > 0) {
+      await connection.commit();
+      return res.json({
+        message: 'La reserva ya tiene un check-in activo',
+        ocupacion: ocupacionActiva[0]
+      });
+    }
+
+    const [insert] = await connection.query(
+      `INSERT INTO ocupacion (id_reserva, fecha_ingreso)
+       VALUES (?, NOW())`,
+      [idReserva]
+    );
+
+    // Asegurar estado de reserva (en check-in queda confirmada)
+    if (reserva.estado !== 'confirmada') {
+      await connection.query(
+        `UPDATE reserva SET estado = 'confirmada' WHERE id_reserva = ?`,
+        [idReserva]
+      );
+    }
+
+    // Marcar habitación ocupada (estado actual)
+    await connection.query(
+      `UPDATE habitacion SET estado = 'ocupada' WHERE id_habitacion = ?`,
+      [reserva.id_habitacion]
+    );
+
+    await connection.commit();
+    return res.json({ message: 'Check-in realizado', id_ocupacion: insert.insertId });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error en check-in:', error);
+    return res.status(500).json({ message: 'Error al realizar check-in' });
+  } finally {
+    connection.release();
+  }
+};
+
+export const checkOutReserva = async (req, res) => {
+  const idReserva = Number(req.params.id);
+  if (!Number.isInteger(idReserva) || idReserva <= 0) {
+    return res.status(400).json({ message: 'ID de reserva inválido' });
+  }
+
+  const connection = await db.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [reservas] = await connection.query(
+      `SELECT id_reserva, id_habitacion, estado
+       FROM reserva
+       WHERE id_reserva = ?
+       FOR UPDATE`,
+      [idReserva]
+    );
+
+    if (reservas.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    const reserva = reservas[0];
+
+    if (reserva.estado === 'cancelada') {
+      await connection.rollback();
+      return res.status(400).json({ message: 'No se puede hacer check-out a una reserva cancelada' });
+    }
+
+    const [ocupacionActiva] = await connection.query(
+      `SELECT id_ocupacion, fecha_ingreso
+       FROM ocupacion
+       WHERE id_reserva = ? AND fecha_salida IS NULL
+       LIMIT 1
+       FOR UPDATE`,
+      [idReserva]
+    );
+
+    if (ocupacionActiva.length === 0) {
+      await connection.rollback();
+      return res.status(400).json({ message: 'No hay check-in activo para esta reserva' });
+    }
+
+    await connection.query(
+      `UPDATE ocupacion
+       SET fecha_salida = NOW()
+       WHERE id_ocupacion = ?`,
+      [ocupacionActiva[0].id_ocupacion]
+    );
+
+    // Finalizar reserva
+    await connection.query(
+      `UPDATE reserva SET estado = 'finalizada' WHERE id_reserva = ?`,
+      [idReserva]
+    );
+
+    // Habitacion pasa a limpieza (flujo típico)
+    await connection.query(
+      `UPDATE habitacion SET estado = 'limpieza' WHERE id_habitacion = ?`,
+      [reserva.id_habitacion]
+    );
+
+    // Crear tarea de limpieza automática
+    await connection.query(
+      `INSERT INTO limpieza (id_habitacion, id_reserva, tipo, estado)
+       VALUES (?, ?, 'checkout', 'pendiente')`,
+      [reserva.id_habitacion, idReserva]
+    );
+
+    await connection.commit();
+    return res.json({ message: 'Check-out realizado' });
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error en check-out:', error);
+    return res.status(500).json({ message: 'Error al realizar check-out' });
+  } finally {
+    connection.release();
+  }
+};
+
+// Actualizar estado de reserva (admin)
+export const actualizarEstadoReserva = async (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+
+  // Validar estado
+  const estadosValidos = ['pendiente', 'confirmada', 'cancelada', 'finalizada'];
+  if (!estadosValidos.includes(estado)) {
+    return res.status(400).json({ message: 'Estado inválido' });
+  }
+
+  try {
+    // Verificar que la reserva existe
+    const [reserva] = await db.query(
+      'SELECT * FROM reserva WHERE id_reserva = ?',
+      [id]
+    );
+
+    if (reserva.length === 0) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    // Actualizar estado
+    await db.query(
+      'UPDATE reserva SET estado = ? WHERE id_reserva = ?',
+      [estado, id]
+    );
+
+    res.json({ message: 'Estado actualizado exitosamente' });
+  } catch (error) {
+    console.error('Error al actualizar estado:', error);
+    res.status(500).json({ message: 'Error al actualizar estado' });
+  }
+};
+
+// Eliminar reserva (admin)
+export const eliminarReserva = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Verificar que la reserva existe
+    const [reserva] = await db.query(
+      'SELECT * FROM reserva WHERE id_reserva = ?',
+      [id]
+    );
+
+    if (reserva.length === 0) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    // Eliminar la reserva
+    await db.query('DELETE FROM reserva WHERE id_reserva = ?', [id]);
+
+    res.json({ message: 'Reserva eliminada exitosamente' });
+  } catch (error) {
+    console.error('Error al eliminar reserva:', error);
+    res.status(500).json({ message: 'Error al eliminar reserva' });
+  }
+};
+
+// Actualizar datos de reserva (admin)
+export const actualizarReserva = async (req, res) => {
+  const { id } = req.params;
+  const {
+    id_cliente,
+    id_habitacion,
+    fecha_entrada,
+    fecha_salida,
+    cantidad_adultos = 1,
+    cantidad_ninos = 0,
+    hora_llegada = null
+  } = req.body;
+
+  try {
+    const [reservaRows] = await db.query(
+      'SELECT id_reserva, estado FROM reserva WHERE id_reserva = ?',
+      [id]
+    );
+
+    if (reservaRows.length === 0) {
+      return res.status(404).json({ message: 'Reserva no encontrada' });
+    }
+
+    if (['cancelada', 'finalizada'].includes(reservaRows[0].estado)) {
+      return res.status(400).json({ message: 'No se puede editar una reserva cancelada o finalizada' });
+    }
+
+    const [conflictos] = await db.query(
+      `SELECT COUNT(*) AS conflictos
+       FROM reserva
+       WHERE id_habitacion = ?
+         AND id_reserva <> ?
+         AND estado IN ('pendiente', 'confirmada')
+         AND (
+           (fecha_entrada <= ? AND fecha_salida >= ?) OR
+           (fecha_entrada <= ? AND fecha_salida >= ?) OR
+           (fecha_entrada >= ? AND fecha_salida <= ?)
+         )`,
+      [
+        id_habitacion,
+        id,
+        fecha_salida, fecha_entrada,
+        fecha_salida, fecha_salida,
+        fecha_entrada, fecha_salida
+      ]
+    );
+
+    if (conflictos[0].conflictos > 0) {
+      return res.status(400).json({ message: 'La habitación no está disponible para esas fechas' });
+    }
+
+    const precioCalculado = await pricingDinamicoService.calcularPrecio(
+      id_habitacion,
+      fecha_entrada,
+      fecha_salida,
+      req.ip
+    );
+
+    await db.query(
+      `UPDATE reserva
+       SET id_cliente = ?,
+           id_habitacion = ?,
+           fecha_entrada = ?,
+           fecha_salida = ?,
+           total = ?,
+           cantidad_adultos = ?,
+           cantidad_ninos = ?,
+           hora_llegada = ?
+       WHERE id_reserva = ?`,
+      [
+        id_cliente,
+        id_habitacion,
+        fecha_entrada,
+        fecha_salida,
+        precioCalculado.precio_total,
+        cantidad_adultos,
+        cantidad_ninos,
+        hora_llegada || null,
+        id
+      ]
+    );
+
+    res.json({
+      message: 'Reserva actualizada exitosamente',
+      detalles_precio: {
+        precio_por_noche: precioCalculado.precio_por_noche,
+        precio_total: precioCalculado.precio_total,
+        noches: precioCalculado.noches
+      }
+    });
+  } catch (error) {
+    console.error('Error al actualizar reserva:', error);
+    res.status(500).json({ message: 'Error al actualizar reserva' });
+  }
+};

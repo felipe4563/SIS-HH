@@ -1,0 +1,638 @@
+import { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
+import { verificarDisponibilidad } from '../../services/habitacion';
+import { crearReserva } from '../../services/reserva';
+import { calcularPrecioDinamico } from '../../services/pricing';
+import { iniciarPago } from '../../services/pago'; // 👈 NUEVO IMPORT
+import CalendarioReserva from './CalendarioReserva';
+
+const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
+  const { usuario } = useContext(AuthContext);
+  const navigate = useNavigate();
+  
+  const [fechaEntrada, setFechaEntrada] = useState('');
+  const [fechaSalida, setFechaSalida] = useState('');
+  const [disponible, setDisponible] = useState(null);
+  const [verificando, setVerificando] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const capacidad = habitacion.tipo.capacidad;
+  const [cantidadAdultos, setCantidadAdultos] = useState(1);
+  const [cantidadNinos, setCantidadNinos] = useState(0);
+
+  const maxAdultos = capacidad;
+  const maxNinos = Math.max(0, capacidad - cantidadAdultos);
+  const [horaLlegada, setHoraLlegada] = useState('');
+
+  // 🎯 Estados para pricing dinámico
+  const [precioDinamico, setPrecioDinamico] = useState(null);
+  const [calculandoPrecio, setCalculandoPrecio] = useState(false);
+  const [mostrarDetalles, setMostrarDetalles] = useState(false);
+
+  // 🎯 Calcular precio dinámico cuando cambien las fechas
+  useEffect(() => {
+    const calcularPrecio = async () => {
+      if (fechaEntrada && fechaSalida) {
+        try {
+          setCalculandoPrecio(true);
+          const resultado = await calcularPrecioDinamico({
+            id_habitacion: habitacion.id_habitacion,
+            fecha_entrada: fechaEntrada,
+            fecha_salida: fechaSalida
+          });
+          setPrecioDinamico(resultado);
+        } catch (err) {
+          console.error('Error calculando precio:', err);
+          setPrecioDinamico(null);
+        } finally {
+          setCalculandoPrecio(false);
+        }
+      } else {
+        setPrecioDinamico(null);
+      }
+    };
+
+    calcularPrecio();
+  }, [fechaEntrada, fechaSalida, habitacion.id_habitacion]);
+
+  const handleVerificarDisponibilidad = async () => {
+    if (!fechaEntrada || !fechaSalida) return;
+    
+    setVerificando(true);
+    setError('');
+    
+    try {
+      const resultado = await verificarDisponibilidad(
+        habitacion.id_habitacion,
+        fechaEntrada,
+        fechaSalida
+      );
+      setDisponible(resultado.disponible);
+    } catch (err) {
+      setError('Error al verificar disponibilidad');
+      console.error(err);
+    } finally {
+      setVerificando(false);
+    }
+  };
+
+  const handleFechasChange = (entrada, salida) => {
+    setFechaEntrada(entrada);
+    setFechaSalida(salida);
+    setDisponible(null);
+    setError('');
+  };
+
+  useEffect(() => {
+    if (fechaEntrada && fechaSalida) {
+      handleVerificarDisponibilidad();
+    }
+  }, [fechaEntrada, fechaSalida]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!fechaEntrada || !fechaSalida) {
+      setError('Por favor selecciona las fechas');
+      return;
+    }
+
+    if (!precioDinamico || precioDinamico.noches <= 0) {
+      setError('La fecha de salida debe ser posterior a la de entrada');
+      return;
+    }
+
+    if (cantidadAdultos < 1) {
+      setError('Debe haber al menos 1 adulto');
+      return;
+    }
+
+    const totalPersonas = cantidadAdultos + cantidadNinos;
+    if (totalPersonas > habitacion.tipo.capacidad) {
+      setError(`La habitación tiene capacidad para ${habitacion.tipo.capacidad} personas`);
+      return;
+    }
+
+    if (!usuario) {
+      sessionStorage.setItem('reservaPendiente', JSON.stringify({
+        id_habitacion: habitacion.id_habitacion,
+        numero_habitacion: habitacion.numero,
+        fecha_entrada: fechaEntrada,
+        fecha_salida: fechaSalida,
+        cantidad_adultos: cantidadAdultos,
+        cantidad_ninos: cantidadNinos,
+        hora_llegada: horaLlegada
+      }));
+      
+      alert('Debes iniciar sesión para completar la reserva');
+      navigate('/login');
+      return;
+    }
+
+    const idCliente = usuario.id_cliente;
+    
+    if (!idCliente) {
+      setError('Error: No se encontró la información del cliente');
+      console.error('Usuario sin id_cliente:', usuario);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      // 1️⃣ CREAR LA RESERVA
+      console.log('🎯 Paso 1: Creando reserva...');
+      const responseReserva = await crearReserva({
+        id_cliente: idCliente,
+        id_habitacion: habitacion.id_habitacion,
+        fecha_entrada: fechaEntrada,
+        fecha_salida: fechaSalida,
+        cantidad_adultos: cantidadAdultos,
+        cantidad_ninos: cantidadNinos,
+        hora_llegada: horaLlegada
+      });
+
+      console.log('✅ Reserva creada:', responseReserva);
+      const idReserva = responseReserva.id_reserva;
+
+      // 2️⃣ INICIAR EL PAGO INMEDIATAMENTE
+      console.log('💳 Paso 2: Iniciando proceso de pago...');
+      const resultadoPago = await iniciarPago(idReserva);
+
+      if (resultadoPago.success && resultadoPago.paymentUrl) {
+        console.log('🔗 Link de pago generado:', resultadoPago.paymentUrl);
+        
+        // Guardar info para cuando regrese
+        sessionStorage.setItem('pago_pendiente', JSON.stringify({
+          id_reserva: idReserva,
+          id_pago: resultadoPago.id_pago,
+          timestamp: new Date().getTime()
+        }));
+
+        // 3️⃣ REDIRIGIR A RED ENLACE
+        console.log('🚀 Paso 3: Redirigiendo a Red Enlace...');
+        
+        // Cerrar modal y notificar éxito
+        onSuccess();
+        onClose();
+        
+        // Pequeña pausa para que el usuario vea que se procesó
+        setTimeout(() => {
+          alert('¡Reserva creada! Serás redirigido al portal de pagos.');
+          window.location.href = resultadoPago.paymentUrl;
+        }, 500);
+        
+      } else {
+        setError('Reserva creada pero no se pudo iniciar el pago. Ve a "Mis Reservas" para completar el pago.');
+        console.error('Error al generar link de pago:', resultadoPago);
+      }
+
+    } catch (err) {
+      console.error('❌ Error completo:', err);
+      
+      // Diferenciar entre error de reserva y error de pago
+      if (err.message && err.message.includes('pago')) {
+        setError('Reserva creada pero hubo un error al iniciar el pago. Ve a "Mis Reservas" para completar el pago.');
+      } else {
+        setError(err.response?.data?.message || 'Error al crear la reserva');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🎨 Función para obtener el color del ajuste
+  const getAjusteColor = (valor) => {
+    if (valor > 0) return 'text-red-600';
+    if (valor < 0) return 'text-green-600';
+    return 'text-gray-600';
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
+      <div className="bg-white rounded-3xl shadow-2xl w-full sm:max-w-3xl max-h-[95vh] overflow-hidden transform animate-slideUp">
+        
+        {/* 🎨 Header Premium con degradado */}
+        <div className="relative text-white p-5 sm:p-6 md:p-8 overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0A30A 0%, #E8840A 55%, #FF6F00 100%)' }}>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl"></div>
+          
+          <div className="relative z-10 flex justify-between items-start">
+            <div className="flex-1">
+              <div className="inline-flex items-center bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full mb-4">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                </svg>
+                <span className="text-sm font-medium">Habitación {habitacion.numero}</span>
+              </div>
+              
+              <h2 className="text-3xl font-bold mb-2 tracking-tight">
+                {habitacion.tipo.nombre}
+              </h2>
+              
+              <div className="flex flex-wrap gap-4 text-orange-100">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span className="text-sm">Hasta {habitacion.tipo.capacidad} personas</span>
+                </div>
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-xl font-bold">Bs. {habitacion.precio_total}</span>
+                  <span className="text-sm ml-1">/noche base</span>
+                </div>
+              </div>
+            </div>
+            
+            <button
+              onClick={onClose}
+              className="ml-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-200 backdrop-blur-sm group"
+            >
+              <svg className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* 📋 Contenido del formulario */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto max-h-[calc(95vh-160px)]">
+          
+          {/* 👤 Info del usuario */}
+          {usuario && (
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4 flex items-center">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4" style={{ background: 'linear-gradient(135deg, #F0A30A, #FF6F00)' }}>
+                {usuario.nombre.charAt(0)}{usuario.apellido.charAt(0)}
+              </div>
+              <div>
+                <p className="text-gray-900 font-semibold">
+                  {usuario.nombre} {usuario.apellido}
+                </p>
+                <p className="text-gray-600 text-sm">{usuario.correo}</p>
+              </div>
+            </div>
+          )}
+
+          {/* 🧩 Layout intuitivo: calendario + datos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* 📅 Fechas con calendario */}
+            <div className="min-w-0">
+              <div className="rounded-2xl border border-gray-200 p-3 sm:p-4 bg-white overflow-hidden">
+                <CalendarioReserva
+                  idHabitacion={habitacion.id_habitacion}
+                  fechaEntrada={fechaEntrada}
+                  fechaSalida={fechaSalida}
+                  onFechasChange={handleFechasChange}
+                />
+              </div>
+            </div>
+
+            {/* 👥 Datos de la reserva */}
+            <div className="min-w-0 space-y-4">
+              {/* 👥 Huéspedes */}
+              <div className="bg-gray-50 rounded-2xl p-5 sm:p-6 space-y-4 border border-gray-100">
+                <h3 className="font-bold text-gray-900 flex items-center">
+                  <svg className="w-5 h-5 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                  Cantidad de huéspedes
+                </h3>
+
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                Capacidad máxima: <strong>{capacidad} {capacidad === 1 ? 'persona' : 'personas'}</strong> (adultos + niños)
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      Adultos
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={cantidadAdultos}
+                        onChange={(e) => {
+                          const nuevosAdultos = Number(e.target.value);
+                          setCantidadAdultos(nuevosAdultos);
+                          const nuevosMaxNinos = Math.max(0, capacidad - nuevosAdultos);
+                          if (cantidadNinos > nuevosMaxNinos) setCantidadNinos(nuevosMaxNinos);
+                        }}
+                        required
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-[#F0A30A] transition-all appearance-none font-semibold cursor-pointer bg-white"
+                      >
+                        {Array.from({ length: maxAdultos }, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>{num} {num === 1 ? 'adulto' : 'adultos'}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                      Niños
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={cantidadNinos}
+                        onChange={(e) => setCantidadNinos(Number(e.target.value))}
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-[#F0A30A] transition-all appearance-none font-semibold cursor-pointer bg-white"
+                      >
+                        {Array.from({ length: maxNinos + 1 }, (_, i) => i).map(num => (
+                          <option key={num} value={num}>{num} {num === 1 ? 'niño' : 'niños'}</option>
+                        ))}
+                      </select>
+                      <svg className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ⏰ Hora de llegada */}
+              <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200">
+                <label className="flex items-center text-sm font-bold text-gray-700 mb-3">
+                  <svg className="w-5 h-5 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Hora estimada de llegada
+                  <span className="ml-2 text-xs font-normal text-gray-500">(opcional)</span>
+                </label>
+                <input
+                  type="time"
+                  value={horaLlegada}
+                  onChange={(e) => setHoraLlegada(e.target.value)}
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-[#F0A30A] transition-all font-medium"
+                />
+                <p className="text-xs text-gray-500 mt-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Check-in disponible de 14:00 a 22:00
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 💰 Resumen de la reserva CON PRICING DINÁMICO */}
+          {calculandoPrecio && (
+            <div className="bg-orange-50 rounded-2xl p-6 text-center border border-orange-200">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3">
+                <div className="w-6 h-6 border-2 border-[#F0A30A] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <p className="text-orange-900 font-semibold">Calculando precio dinámico...</p>
+            </div>
+          )}
+
+          {precioDinamico && !calculandoPrecio && (
+            <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-2xl p-6 border-2 border-orange-100 shadow-lg">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center text-lg">
+                <svg className="w-6 h-6 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Resumen con Precio Inteligente
+              </h3>
+              
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-700 flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                    Noches de estancia
+                  </span>
+                  <span className="font-bold text-gray-900 text-lg">{precioDinamico.noches}</span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-700 flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Huéspedes
+                  </span>
+                  <span className="font-bold text-gray-900">
+                    {cantidadAdultos + cantidadNinos} {cantidadAdultos + cantidadNinos === 1 ? 'persona' : 'personas'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-700 flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Precio base por noche
+                  </span>
+                  <span className="text-gray-600 line-through">Bs. {precioDinamico.precio_base}</span>
+                </div>
+
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-700 flex items-center font-semibold">
+                    <svg className="w-4 h-4 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                    Precio dinámico por noche
+                  </span>
+                  <span className="font-bold text-[#F0A30A] text-lg">Bs. {precioDinamico.precio_por_noche}</span>
+                </div>
+
+                {/* 🎯 Botón para ver/ocultar detalles */}
+                <button
+                  type="button"
+                  onClick={() => setMostrarDetalles(!mostrarDetalles)}
+                  className="w-full py-2 text-sm text-[#F0A30A] hover:text-[#FF6F00] font-semibold flex items-center justify-center gap-2 transition-colors"
+                >
+                  {mostrarDetalles ? 'Ocultar' : 'Ver'} detalles del precio
+                  <svg 
+                    className={`w-4 h-4 transition-transform ${mostrarDetalles ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* 📊 Detalles de ajuste de temporada (expandible) */}
+                {mostrarDetalles && (
+                  <div className="mt-3 pt-3 border-t border-orange-200 space-y-2 bg-white/50 rounded-xl p-3">
+                    <p className="text-xs font-bold text-gray-600 mb-2">AJUSTE APLICADO:</p>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">
+                        • {precioDinamico.ajustes.temporada > 0 ? 'Temporada alta' : 'Temporada normal'}
+                      </span>
+                      <span className={`font-semibold ${getAjusteColor(precioDinamico.ajustes.temporada)}`}>
+                        {precioDinamico.ajustes.temporada > 0 ? '+' : ''}{precioDinamico.ajustes.temporada}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="border-t-2 border-orange-200 pt-3 mt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-gray-900 text-lg">Total a pagar</span>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold bg-gradient-to-r from-[#F0A30A] to-[#FF6F00] bg-clip-text text-transparent">
+                        Bs. {precioDinamico.precio_total.toFixed(2)}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        ({precioDinamico.noches} {precioDinamico.noches === 1 ? 'noche' : 'noches'} × Bs. {precioDinamico.precio_por_noche})
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ✅ Estado de disponibilidad */}
+          {verificando && (
+            <div className="bg-orange-50 rounded-2xl p-6 text-center border border-orange-200">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3">
+                <div className="w-6 h-6 border-2 border-[#F0A30A] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <p className="text-orange-900 font-semibold">Verificando disponibilidad...</p>
+            </div>
+          )}
+
+          {disponible !== null && !verificando && (
+            <div className={`rounded-2xl p-6 border-2 transform transition-all duration-300 ${
+              disponible 
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100 shadow-lg' 
+                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 shadow-red-100 shadow-lg'
+            }`}>
+              <div className="flex items-start">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
+                  disponible ? 'bg-green-500' : 'bg-red-500'
+                }`}>
+                  {disponible ? (
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h4 className={`font-bold text-lg mb-1 ${
+                    disponible ? 'text-green-900' : 'text-red-900'
+                  }`}>
+                    {disponible ? '¡Excelentes noticias!' : 'Lo sentimos'}
+                  </h4>
+                  <p className={`text-sm ${
+                    disponible ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                    {disponible 
+                      ? 'La habitación está disponible para las fechas seleccionadas' 
+                      : 'Esta habitación no está disponible para las fechas seleccionadas.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ⚠️ Error */}
+          {error && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start shadow-lg">
+              <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="text-red-900 font-semibold">Error</p>
+                <p className="text-red-700 text-sm mt-1">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* 🎯 Botones de acción */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:shadow-md"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading || disponible === false || !precioDinamico}
+              style={!(loading || disponible === false || !precioDinamico) ? { background: 'linear-gradient(135deg, #F0A30A 0%, #E8840A 55%, #FF6F00 100%)' } : {}}
+              className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all duration-200 transform ${
+                loading || disponible === false || !precioDinamico
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]'
+              }`}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Procesando reserva y pago...
+                </span>
+              ) : !usuario ? (
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  Iniciar sesión y reservar
+                </span>
+              ) : (
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Confirmar y pagar
+                </span>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
+        }
+
+        .animate-slideUp {
+          animation: slideUp 0.3s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default ModalReserva;
