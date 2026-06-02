@@ -6,6 +6,7 @@ import { Toaster } from "react-hot-toast";
 // 🏠 PÁGINAS PÚBLICAS
 import Home from "./pages/home";
 import Login from "./pages/Login";
+import Tour360Page from "./pages/Tour360Page";
 // 👤 PÁGINAS DE CLIENTE
 import MisReservas from "./pages/Home/Misreservas";
 import MiPerfil from "./pages/Home/Miperfil";
@@ -38,6 +39,9 @@ function App() {
       <Routes>
         {/* 🏠 PÁGINA PRINCIPAL PÚBLICA */}
       <Route path="/" element={<Home />} />
+
+      {/* 🌐 TOUR VIRTUAL 360° */}
+      <Route path="/tour360" element={<Tour360Page />} />
 
       {/* 🔑 LOGIN UNIFICADO (huéspedes y personal) */}
       <Route

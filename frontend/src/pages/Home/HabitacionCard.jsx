@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import TourVirtual360 from './TourVirtual360';
+import { useNavigate } from 'react-router-dom';
 
 const ICON_DEFS = {
   globe:        ['M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418'],
@@ -33,7 +33,7 @@ const construirUrlImagen = (ruta) => {
 
 const HabitacionCard = ({ habitacion, onReservar }) => {
   const [imagenActual, setImagenActual] = useState(0);
-  const [mostrarTour, setMostrarTour] = useState(false);
+  const navigate = useNavigate();
 
   const imagenesNormales = habitacion.imagenes?.filter(img => img.tipo_imagen === 'normal') || [];
   const imagenes360     = habitacion.imagenes?.filter(img => img.tipo_imagen === '360') || [];
@@ -51,17 +51,15 @@ const HabitacionCard = ({ habitacion, onReservar }) => {
   };
   const badge = estadoBadge[habitacion.estado] ?? estadoBadge.mantenimiento;
 
-  return (
-    <>
-      {mostrarTour && (
-        <TourVirtual360
-          imagenes360={imagenes360}
-          nombreHabitacion={`Habitación ${habitacion.numero}`}
-          onClose={() => setMostrarTour(false)}
-        />
-      )}
+  const verTour = () => navigate('/tour360', {
+    state: {
+      imagenes360,
+      nombreHabitacion: `Habitación ${habitacion.numero}`,
+    },
+  });
 
-      <div className="group bg-white dark:bg-gray-900 rounded-3xl border border-brand-mist dark:border-gray-700 shadow-md overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+  return (
+    <div className="group bg-white dark:bg-gray-900 rounded-3xl border border-brand-mist dark:border-gray-700 shadow-md overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
         {/* Galería */}
         <div className="relative h-56 sm:h-64 bg-gray-100 dark:bg-gray-800 overflow-hidden">
           <img
@@ -144,7 +142,7 @@ const HabitacionCard = ({ habitacion, onReservar }) => {
           <div className="space-y-2">
             {imagenes360.length > 0 && (
               <button
-                onClick={() => setMostrarTour(true)}
+                onClick={verTour}
                 className="w-full py-3 rounded-xl font-semibold transition-all duration-200 bg-gradient-to-r from-brand-slate to-gray-800 hover:from-gray-800 hover:to-brand-slate text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2"
               >
                 <SvgIcon name="globe" className="h-5 w-5 text-brand-orange" />
@@ -172,8 +170,7 @@ const HabitacionCard = ({ habitacion, onReservar }) => {
             </button>
           </div>
         </div>
-      </div>
-    </>
+    </div>
   );
 };
 
