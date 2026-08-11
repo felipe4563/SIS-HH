@@ -39,7 +39,7 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: /api
-        VITE_BASE_URL: ""
+        VITE_BASE_URL: ${PUBLIC_ORIGIN}
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
     container_name: hyh_frontend
     restart: unless-stopped
