@@ -27,7 +27,7 @@ services:
     environment:
       DB_HOST: db
     ports:
-      - "127.0.0.1:4000:4000"
+      - "127.0.0.1:4001:4000"
     volumes:
       - uploads_data:/app/uploads
     depends_on:
