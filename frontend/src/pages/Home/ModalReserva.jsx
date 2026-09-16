@@ -206,14 +206,14 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
 
   // 🎨 Función para obtener el color del ajuste
   const getAjusteColor = (valor) => {
-    if (valor > 0) return 'text-red-600';
-    if (valor < 0) return 'text-green-600';
-    return 'text-gray-600';
+    if (valor > 0) return 'text-red-600 dark:text-red-400';
+    if (valor < 0) return 'text-green-600 dark:text-green-400';
+    return 'text-gray-600 dark:text-gray-400';
   };
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
-      <div className="bg-white rounded-3xl shadow-2xl w-full sm:max-w-3xl max-h-[95vh] overflow-hidden transform animate-slideUp">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full sm:max-w-3xl max-h-[95vh] overflow-hidden transform animate-slideUp">
         
         {/* 🎨 Header Premium con degradado */}
         <div className="relative text-white p-5 sm:p-6 md:p-8 overflow-hidden" style={{ background: 'linear-gradient(135deg, #F0A30A 0%, #E8840A 55%, #FF6F00 100%)' }}>
@@ -266,15 +266,15 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
           
           {/* 👤 Info del usuario */}
           {usuario && (
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-2xl p-4 flex items-center">
+            <div className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40 border border-orange-200 dark:border-orange-900 rounded-2xl p-4 flex items-center">
               <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg mr-4" style={{ background: 'linear-gradient(135deg, #F0A30A, #FF6F00)' }}>
                 {usuario.nombre.charAt(0)}{usuario.apellido.charAt(0)}
               </div>
               <div>
-                <p className="text-gray-900 font-semibold">
+                <p className="text-gray-900 dark:text-gray-100 font-semibold">
                   {usuario.nombre} {usuario.apellido}
                 </p>
-                <p className="text-gray-600 text-sm">{usuario.correo}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{usuario.correo}</p>
               </div>
             </div>
           )}
@@ -283,7 +283,7 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* 📅 Fechas con calendario */}
             <div className="min-w-0">
-              <div className="rounded-2xl border border-gray-200 p-3 sm:p-4 bg-white overflow-hidden">
+              <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 bg-white dark:bg-gray-800 overflow-hidden">
                 <CalendarioReserva
                   idHabitacion={habitacion.id_habitacion}
                   fechaEntrada={fechaEntrada}
@@ -296,21 +296,21 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
             {/* 👥 Datos de la reserva */}
             <div className="min-w-0 space-y-4">
               {/* 👥 Huéspedes */}
-              <div className="bg-gray-50 rounded-2xl p-5 sm:p-6 space-y-4 border border-gray-100">
-                <h3 className="font-bold text-gray-900 flex items-center">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 sm:p-6 space-y-4 border border-gray-100 dark:border-gray-700">
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center">
                   <svg className="w-5 h-5 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                   Cantidad de huéspedes
                 </h3>
 
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-lg px-3 py-2">
                 Capacidad máxima: <strong>{capacidad} {capacidad === 1 ? 'persona' : 'personas'}</strong> (adultos + niños)
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                       Adultos
                     </label>
                     <div className="relative">
@@ -323,7 +323,7 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
                           if (cantidadNinos > nuevosMaxNinos) setCantidadNinos(nuevosMaxNinos);
                         }}
                         required
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-[#F0A30A] transition-all appearance-none font-semibold cursor-pointer bg-white"
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-[#F0A30A] transition-all appearance-none font-semibold cursor-pointer bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                       >
                         {Array.from({ length: maxAdultos }, (_, i) => i + 1).map(num => (
                           <option key={num} value={num}>{num} {num === 1 ? 'adulto' : 'adultos'}</option>
@@ -336,14 +336,14 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                       Niños
                     </label>
                     <div className="relative">
                       <select
                         value={cantidadNinos}
                         onChange={(e) => setCantidadNinos(Number(e.target.value))}
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-[#F0A30A] transition-all appearance-none font-semibold cursor-pointer bg-white"
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-[#F0A30A] transition-all appearance-none font-semibold cursor-pointer bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                       >
                         {Array.from({ length: maxNinos + 1 }, (_, i) => i).map(num => (
                           <option key={num} value={num}>{num} {num === 1 ? 'niño' : 'niños'}</option>
@@ -358,21 +358,21 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
               </div>
 
               {/* ⏰ Hora de llegada */}
-              <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200">
-                <label className="flex items-center text-sm font-bold text-gray-700 mb-3">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700">
+                <label className="flex items-center text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
                   <svg className="w-5 h-5 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Hora estimada de llegada
-                  <span className="ml-2 text-xs font-normal text-gray-500">(opcional)</span>
+                  <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-500">(opcional)</span>
                 </label>
                 <input
                   type="time"
                   value={horaLlegada}
                   onChange={(e) => setHoraLlegada(e.target.value)}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-[#F0A30A] transition-all font-medium"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-[#F0A30A] transition-all font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 />
-                <p className="text-xs text-gray-500 mt-2 flex items-center">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 flex items-center">
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -384,17 +384,17 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
 
           {/* 💰 Resumen de la reserva CON PRICING DINÁMICO */}
           {calculandoPrecio && (
-            <div className="bg-orange-50 rounded-2xl p-6 text-center border border-orange-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3">
+            <div className="bg-orange-50 dark:bg-orange-950/30 rounded-2xl p-6 text-center border border-orange-200 dark:border-orange-900">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-900/50 rounded-full mb-3">
                 <div className="w-6 h-6 border-2 border-[#F0A30A] border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <p className="text-orange-900 font-semibold">Calculando precio dinámico...</p>
+              <p className="text-orange-900 dark:text-orange-300 font-semibold">Calculando precio dinámico...</p>
             </div>
           )}
 
           {precioDinamico && !calculandoPrecio && (
-            <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-2xl p-6 border-2 border-orange-100 shadow-lg">
-              <h3 className="font-bold text-gray-900 mb-4 flex items-center text-lg">
+            <div className="bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 dark:from-orange-950/30 dark:via-amber-950/30 dark:to-yellow-950/30 rounded-2xl p-6 border-2 border-orange-100 dark:border-orange-900 shadow-lg">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center text-lg">
                 <svg className="w-6 h-6 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
@@ -403,39 +403,39 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-700 flex items-center">
+                  <span className="text-gray-700 dark:text-gray-300 flex items-center">
                     <svg className="w-4 h-4 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                     </svg>
                     Noches de estancia
                   </span>
-                  <span className="font-bold text-gray-900 text-lg">{precioDinamico.noches}</span>
+                  <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">{precioDinamico.noches}</span>
                 </div>
-                
+
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-700 flex items-center">
+                  <span className="text-gray-700 dark:text-gray-300 flex items-center">
                     <svg className="w-4 h-4 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                     Huéspedes
                   </span>
-                  <span className="font-bold text-gray-900">
+                  <span className="font-bold text-gray-900 dark:text-gray-100">
                     {cantidadAdultos + cantidadNinos} {cantidadAdultos + cantidadNinos === 1 ? 'persona' : 'personas'}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-700 flex items-center">
+                  <span className="text-gray-700 dark:text-gray-300 flex items-center">
                     <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Precio base por noche
                   </span>
-                  <span className="text-gray-600 line-through">Bs. {precioDinamico.precio_base}</span>
+                  <span className="text-gray-600 dark:text-gray-400 line-through">Bs. {precioDinamico.precio_base}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-700 flex items-center font-semibold">
+                  <span className="text-gray-700 dark:text-gray-300 flex items-center font-semibold">
                     <svg className="w-4 h-4 mr-2 text-[#F0A30A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
@@ -463,11 +463,11 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
 
                 {/* 📊 Detalles de ajuste de temporada (expandible) */}
                 {mostrarDetalles && (
-                  <div className="mt-3 pt-3 border-t border-orange-200 space-y-2 bg-white/50 rounded-xl p-3">
-                    <p className="text-xs font-bold text-gray-600 mb-2">AJUSTE APLICADO:</p>
+                  <div className="mt-3 pt-3 border-t border-orange-200 dark:border-orange-900 space-y-2 bg-white/50 dark:bg-gray-900/40 rounded-xl p-3">
+                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400 mb-2">AJUSTE APLICADO:</p>
 
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">
+                      <span className="text-gray-600 dark:text-gray-400">
                         • {precioDinamico.ajustes.temporada > 0 ? 'Temporada alta' : 'Temporada normal'}
                       </span>
                       <span className={`font-semibold ${getAjusteColor(precioDinamico.ajustes.temporada)}`}>
@@ -476,15 +476,15 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
                     </div>
                   </div>
                 )}
-                
-                <div className="border-t-2 border-orange-200 pt-3 mt-3">
+
+                <div className="border-t-2 border-orange-200 dark:border-orange-900 pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-900 text-lg">Total a pagar</span>
+                    <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">Total a pagar</span>
                     <div className="text-right">
                       <div className="text-3xl font-bold bg-gradient-to-r from-[#F0A30A] to-[#FF6F00] bg-clip-text text-transparent">
                         Bs. {precioDinamico.precio_total.toFixed(2)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         ({precioDinamico.noches} {precioDinamico.noches === 1 ? 'noche' : 'noches'} × Bs. {precioDinamico.precio_por_noche})
                       </div>
                     </div>
@@ -496,19 +496,19 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
 
           {/* ✅ Estado de disponibilidad */}
           {verificando && (
-            <div className="bg-orange-50 rounded-2xl p-6 text-center border border-orange-200">
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3">
+            <div className="bg-orange-50 dark:bg-orange-950/30 rounded-2xl p-6 text-center border border-orange-200 dark:border-orange-900">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-900/50 rounded-full mb-3">
                 <div className="w-6 h-6 border-2 border-[#F0A30A] border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <p className="text-orange-900 font-semibold">Verificando disponibilidad...</p>
+              <p className="text-orange-900 dark:text-orange-300 font-semibold">Verificando disponibilidad...</p>
             </div>
           )}
 
           {disponible !== null && !verificando && (
             <div className={`rounded-2xl p-6 border-2 transform transition-all duration-300 ${
-              disponible 
-                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100 shadow-lg' 
-                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 shadow-red-100 shadow-lg'
+              disponible
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-300 dark:border-green-800 shadow-green-100 dark:shadow-none shadow-lg'
+                : 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-300 dark:border-red-800 shadow-red-100 dark:shadow-none shadow-lg'
             }`}>
               <div className="flex items-start">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center mr-4 ${
@@ -526,12 +526,12 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
                 </div>
                 <div className="flex-1">
                   <h4 className={`font-bold text-lg mb-1 ${
-                    disponible ? 'text-green-900' : 'text-red-900'
+                    disponible ? 'text-green-900 dark:text-green-300' : 'text-red-900 dark:text-red-300'
                   }`}>
                     {disponible ? '¡Excelentes noticias!' : 'Lo sentimos'}
                   </h4>
                   <p className={`text-sm ${
-                    disponible ? 'text-green-700' : 'text-red-700'
+                    disponible ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'
                   }`}>
                     {disponible 
                       ? 'La habitación está disponible para las fechas seleccionadas' 
@@ -544,13 +544,13 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
 
           {/* ⚠️ Error */}
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start shadow-lg">
-              <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-start shadow-lg">
+              <svg className="w-6 h-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div>
-                <p className="text-red-900 font-semibold">Error</p>
-                <p className="text-red-700 text-sm mt-1">{error}</p>
+                <p className="text-red-900 dark:text-red-300 font-semibold">Error</p>
+                <p className="text-red-700 dark:text-red-400 text-sm mt-1">{error}</p>
               </div>
             </div>
           )}
@@ -560,7 +560,7 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 hover:shadow-md"
+              className="flex-1 px-6 py-4 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-200 hover:shadow-md"
             >
               Cancelar
             </button>
@@ -570,7 +570,7 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
               style={!(loading || disponible === false || !precioDinamico) ? { background: 'linear-gradient(135deg, #F0A30A 0%, #E8840A 55%, #FF6F00 100%)' } : {}}
               className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all duration-200 transform ${
                 loading || disponible === false || !precioDinamico
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   : 'text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]'
               }`}
             >

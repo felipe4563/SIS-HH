@@ -59,12 +59,13 @@ const HabitacionCard = ({ habitacion, onReservar }) => {
   });
 
   return (
-    <div className="group bg-white dark:bg-gray-900 rounded-3xl border border-brand-mist dark:border-gray-700 shadow-md overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+    <div className="group bg-white dark:bg-gray-900 rounded-3xl border border-slate-200/80 dark:border-gray-700/80 shadow-lg shadow-slate-200/50 dark:shadow-black/20 overflow-hidden hover:shadow-2xl hover:shadow-brand-orange/10 dark:hover:shadow-brand-orange/5 hover:-translate-y-2 transition-all duration-300">
         {/* Galería */}
         <div className="relative h-56 sm:h-64 bg-gray-100 dark:bg-gray-800 overflow-hidden">
           <img
             src={construirUrlImagen(imagenes[imagenActual]?.ruta)}
             alt={`Habitación ${habitacion.numero}`}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             onError={(e) => { e.target.src = 'https://placehold.co/400x300?text=Error+Imagen'; }}
           />
@@ -143,7 +144,7 @@ const HabitacionCard = ({ habitacion, onReservar }) => {
             {imagenes360.length > 0 && (
               <button
                 onClick={verTour}
-                className="w-full py-3 rounded-xl font-semibold transition-all duration-200 bg-gradient-to-r from-brand-slate to-gray-800 hover:from-gray-800 hover:to-brand-slate text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl font-semibold transition-all duration-200 bg-gradient-to-r from-brand-slate to-gray-800 dark:from-gray-700 dark:to-gray-600 hover:from-gray-800 hover:to-brand-slate text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2"
               >
                 <SvgIcon name="globe" className="h-5 w-5 text-brand-orange" />
                 <span>Ver Tour Virtual 360°</span>

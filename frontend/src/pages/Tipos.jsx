@@ -88,21 +88,21 @@ const TiposHabitacionLista = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white shadow-md rounded-xl p-6">
+      <div className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h3 className="text-2xl font-bold text-gray-800">🏷️ Tipos de Habitación</h3>
-            <p className="text-gray-500 text-sm mt-1">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">🏷️ Tipos de Habitación</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
               Gestiona los tipos de habitación disponibles
             </p>
           </div>
           {(tienePermiso('tipo.crear') || tienePermiso('tipo.editar')) && (
             <button
               onClick={() => setShowForm(!showForm)}
-              className={`px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+              className={`px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 self-start sm:self-auto ${
                 showForm
-                  ? 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                  : 'bg-brand-orange hover:brightness-110 text-white'
               }`}
             >
               {showForm ? '✕ Cerrar' : '➕ Nuevo Tipo'}
@@ -113,15 +113,15 @@ const TiposHabitacionLista = () => {
 
       {/* Formulario */}
       {showForm && (
-        <div className="bg-white shadow-md rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-4 sm:p-6">
+          <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
             {editando ? '✏️ Editar Tipo' : '➕ Nuevo Tipo de Habitación'}
           </h4>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Nombre <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -129,13 +129,13 @@ const TiposHabitacionLista = () => {
                   value={form.nombre}
                   onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                   placeholder="Ej: Suite, Individual, Doble"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Capacidad <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
@@ -144,28 +144,28 @@ const TiposHabitacionLista = () => {
                     value={form.capacidad}
                     onChange={(e) => setForm({ ...form, capacidad: e.target.value })}
                     placeholder="Número de personas"
-                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                     min="1"
                     required
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
                     👥 personas
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Precio Base (Bs.) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">Bs.</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-medium">Bs.</span>
                   <input
                     type="number"
                     value={form.precio_base}
                     onChange={(e) => setForm({ ...form, precio_base: e.target.value })}
                     placeholder="0.00"
-                    className="w-full border border-gray-300 pl-12 pr-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 pl-12 pr-4 py-2.5 rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                     min="1"
                     step="0.01"
                     required
@@ -174,7 +174,7 @@ const TiposHabitacionLista = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Descripción
                 </label>
                 <input
@@ -182,7 +182,7 @@ const TiposHabitacionLista = () => {
                   value={form.descripcion}
                   onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
                   placeholder="Descripción breve del tipo"
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-brand-orange focus:border-brand-orange"
                 />
               </div>
             </div>
@@ -191,7 +191,7 @@ const TiposHabitacionLista = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-brand-orange hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -209,7 +209,7 @@ const TiposHabitacionLista = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2.5 rounded-lg font-medium transition-colors"
+                className="px-6 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 py-2.5 rounded-lg font-medium transition-colors"
               >
                 Cancelar
               </button>
@@ -219,83 +219,132 @@ const TiposHabitacionLista = () => {
       )}
 
       {/* Lista de tipos */}
-      <div className="bg-white shadow-md rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Nombre</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Capacidad</th>
-                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Precio Base</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Descripción</th>
-                {(tienePermiso('tipo.editar') || tienePermiso('tipo.eliminar')) && (
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">Acciones</th>
-                )}
-              </tr>
-            </thead>
+      {tipos.length === 0 ? (
+        <div className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-12 text-center">
+          <div className="text-5xl mb-3">🏷️</div>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">No hay tipos registrados</p>
+          <p className="text-gray-400 dark:text-gray-600 text-sm mt-1">Crea el primer tipo de habitación</p>
+        </div>
+      ) : (
+        <>
+          {/* Tarjetas — pantallas chicas */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+            {tipos.map((t) => (
+              <div key={t.id_tipo} className="bg-white dark:bg-gray-900 shadow-md rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="bg-brand-orange/10 dark:bg-brand-orange/20 text-brand-orange w-10 h-10 rounded-lg flex items-center justify-center font-bold flex-shrink-0">
+                    {t.nombre.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="font-medium text-gray-800 dark:text-gray-100">{t.nombre}</span>
+                </div>
 
-            <tbody className="divide-y divide-gray-100">
-              {tipos.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center">
-                    <div className="text-5xl mb-3">🏷️</div>
-                    <p className="text-gray-500 font-medium">No hay tipos registrados</p>
-                    <p className="text-gray-400 text-sm mt-1">Crea el primer tipo de habitación</p>
-                  </td>
-                </tr>
-              ) : (
-                tipos.map((t) => (
-                  <tr key={t.id_tipo} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <span className="bg-blue-100 text-blue-700 w-10 h-10 rounded-lg flex items-center justify-center font-bold">
-                          {t.nombre.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="font-medium text-gray-800">{t.nombre}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                        👥 {t.capacidad}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="font-bold text-blue-600">
-                        Bs. {parseFloat(t.precio_base).toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 text-sm">
-                      {t.descripcion || <span className="text-gray-400">-</span>}
-                    </td>
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm">
+                    👥 {t.capacidad}
+                  </span>
+                  <span className="font-bold text-brand-orange">
+                    Bs. {parseFloat(t.precio_base).toFixed(2)}
+                  </span>
+                </div>
+
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
+                  {t.descripcion || <span className="text-gray-400 dark:text-gray-600">Sin descripción</span>}
+                </p>
+
+                {(tienePermiso('tipo.editar') || tienePermiso('tipo.eliminar')) && (
+                  <div className="flex items-center gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    {tienePermiso('tipo.editar') && (
+                      <button
+                        onClick={() => handleEdit(t)}
+                        className="flex-1 bg-brand-orange/10 dark:bg-brand-orange/20 hover:bg-brand-orange/20 dark:hover:bg-brand-orange/30 text-brand-orange px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        ✏️ Editar
+                      </button>
+                    )}
+                    {tienePermiso('tipo.eliminar') && (
+                      <button
+                        onClick={() => handleDelete(t.id_tipo)}
+                        className="bg-red-100 dark:bg-red-500/15 hover:bg-red-200 dark:hover:bg-red-500/25 text-red-600 dark:text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Tabla — pantallas medianas y grandes */}
+          <div className="hidden md:block bg-white dark:bg-gray-900 shadow-md rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Nombre</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Capacidad</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Precio Base</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Descripción</th>
                     {(tienePermiso('tipo.editar') || tienePermiso('tipo.eliminar')) && (
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-center gap-2">
-                          {tienePermiso('tipo.editar') && (
-                            <button
-                              onClick={() => handleEdit(t)}
-                              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              ✏️ Editar
-                            </button>
-                          )}
-                          {tienePermiso('tipo.eliminar') && (
-                            <button
-                              onClick={() => handleDelete(t.id_tipo)}
-                              className="bg-red-100 hover:bg-red-200 text-red-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-                            >
-                              🗑️
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700 dark:text-gray-300">Acciones</th>
                     )}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {tipos.map((t) => (
+                    <tr key={t.id_tipo} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="bg-brand-orange/10 dark:bg-brand-orange/20 text-brand-orange w-10 h-10 rounded-lg flex items-center justify-center font-bold flex-shrink-0">
+                            {t.nombre.charAt(0).toUpperCase()}
+                          </span>
+                          <span className="font-medium text-gray-800 dark:text-gray-100">{t.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm whitespace-nowrap">
+                          👥 {t.capacidad}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="font-bold text-brand-orange whitespace-nowrap">
+                          Bs. {parseFloat(t.precio_base).toFixed(2)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400 text-sm">
+                        {t.descripcion || <span className="text-gray-400 dark:text-gray-600">-</span>}
+                      </td>
+                      {(tienePermiso('tipo.editar') || tienePermiso('tipo.eliminar')) && (
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            {tienePermiso('tipo.editar') && (
+                              <button
+                                onClick={() => handleEdit(t)}
+                                className="bg-brand-orange/10 dark:bg-brand-orange/20 hover:bg-brand-orange/20 dark:hover:bg-brand-orange/30 text-brand-orange px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                              >
+                                ✏️ Editar
+                              </button>
+                            )}
+                            {tienePermiso('tipo.eliminar') && (
+                              <button
+                                onClick={() => handleDelete(t.id_tipo)}
+                                className="bg-red-100 dark:bg-red-500/15 hover:bg-red-200 dark:hover:bg-red-500/25 text-red-600 dark:text-red-400 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { crearHabitacion, obtenerHabitacion, actualizarHabitacion } from "../../services/habitacion";
 import { listarTipos } from "../../services/tipo";
 
+// Tailwind no genera CSS para clases armadas con template literals (ej. `border-${x}-500`),
+// así que el mapeo de colores por estado tiene que ser de strings literales completos.
+const ESTADO_OPCIONES = [
+  { value: 'disponible', label: 'Disponible', icon: '✅', selected: 'border-green-500 bg-green-50 dark:bg-green-500/10' },
+  { value: 'ocupada', label: 'Ocupada', icon: '🔒', selected: 'border-red-500 bg-red-50 dark:bg-red-500/10' },
+  { value: 'limpieza', label: 'Limpieza', icon: '🧹', selected: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-500/10' },
+];
+
 const HabitacionForm = ({ id, onSuccess, onCancel }) => {
   const [form, setForm] = useState({
     numero: "",
@@ -13,15 +21,15 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
   });
 
   const [tipos, setTipos] = useState([]);
-  
+
   // Imágenes normales
   const [imagenesPreview, setImagenesPreview] = useState([]);
   const [imagenesFiles, setImagenesFiles] = useState([]);
   const [imagenesExistentes, setImagenesExistentes] = useState([]);
-  
+
   // Imágenes 360° (solo lectura en este form)
   const [imagenes360Existentes, setImagenes360Existentes] = useState([]);
-  
+
   const [cargando, setCargando] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
 
@@ -127,26 +135,26 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-xl overflow-hidden max-w-3xl mx-auto">
+    <div className="bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden max-w-3xl mx-auto">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+      <div className="bg-gradient-to-r from-brand-orange-deep to-brand-orange px-6 py-4">
         <h2 className="text-xl font-bold text-white">
           {id ? "✏️ Editar Habitación" : "🏨 Nueva Habitación"}
         </h2>
-        <p className="text-blue-100 text-sm mt-1">
+        <p className="text-white/80 text-sm mt-1">
           {id ? "Modifica los datos de la habitación" : "Completa los datos para registrar"}
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b bg-gray-50">
+      <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
         <button
           type="button"
           onClick={() => setActiveTab('info')}
           className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
             activeTab === 'info'
-              ? 'border-b-2 border-blue-600 text-blue-600 bg-white'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-brand-orange text-brand-orange bg-white dark:bg-gray-900'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
           }`}
         >
           📋 Información
@@ -156,8 +164,8 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
           onClick={() => setActiveTab('imagenes')}
           className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
             activeTab === 'imagenes'
-              ? 'border-b-2 border-blue-600 text-blue-600 bg-white'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'border-b-2 border-brand-orange text-brand-orange bg-white dark:bg-gray-900'
+              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
           }`}
         >
           🖼️ Imágenes ({imagenesExistentes.length + imagenesPreview.length})
@@ -168,8 +176,8 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
             onClick={() => setActiveTab('360')}
             className={`flex-1 py-3 px-4 text-sm font-medium transition-all ${
               activeTab === '360'
-                ? 'border-b-2 border-purple-600 text-purple-600 bg-white'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'border-b-2 border-purple-600 text-purple-600 dark:text-purple-400 bg-white dark:bg-gray-900'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             🔄 Tour 360° ({imagenes360Existentes.length})
@@ -177,15 +185,15 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6">
-        
+      <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+
         {/* TAB: INFORMACIÓN */}
         {activeTab === 'info' && (
           <div className="space-y-5">
             {/* Número y Tipo */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Número de Habitación <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -194,20 +202,20 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                   value={form.numero}
                   onChange={handleChange}
                   placeholder="Ej: 101, 102A"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Tipo <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="id_tipo"
                   value={form.id_tipo}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition"
                   required
                 >
                   <option value="">Seleccione un tipo</option>
@@ -223,18 +231,18 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
             {/* Precio y Piso */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Precio Total (Bs.) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">Bs.</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-medium">Bs.</span>
                   <input
                     type="number"
                     name="precio_total"
                     value={form.precio_total}
                     onChange={handleChange}
                     placeholder="0.00"
-                    className="w-full border border-gray-300 rounded-lg pl-12 pr-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg pl-12 pr-4 py-2.5 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition"
                     min="1"
                     step="0.01"
                     required
@@ -243,7 +251,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Piso
                 </label>
                 <input
@@ -252,7 +260,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                   value={form.piso}
                   onChange={handleChange}
                   placeholder="Ej: 1, 2, 3"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition"
                   min="0"
                 />
               </div>
@@ -260,21 +268,17 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
 
             {/* Estado */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Estado
               </label>
               <div className="grid grid-cols-3 gap-3">
-                {[
-                  { value: 'disponible', label: 'Disponible', icon: '✅', bg: 'green' },
-                  { value: 'ocupada', label: 'Ocupada', icon: '🔒', bg: 'red' },
-                  { value: 'limpieza', label: 'Limpieza', icon: '🧹', bg: 'yellow' }
-                ].map((opt) => (
+                {ESTADO_OPCIONES.map((opt) => (
                   <label
                     key={opt.value}
-                    className={`flex items-center justify-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                    className={`flex items-center justify-center gap-2 p-3 border-2 rounded-lg cursor-pointer transition-all text-gray-700 dark:text-gray-200 ${
                       form.estado === opt.value
-                        ? `border-${opt.bg}-500 bg-${opt.bg}-50`
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        ? opt.selected
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                     }`}
                   >
                     <input
@@ -294,7 +298,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
 
             {/* Descripción */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Descripción
               </label>
               <textarea
@@ -303,7 +307,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                 onChange={handleChange}
                 placeholder="Describe las características de la habitación..."
                 rows={3}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-brand-orange focus:border-brand-orange transition resize-none"
               />
             </div>
           </div>
@@ -314,10 +318,10 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
           <div className="space-y-6">
             {/* Subir nuevas */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Agregar Imágenes
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 transition-colors cursor-pointer">
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center hover:border-brand-orange/60 transition-colors cursor-pointer">
                 <input
                   type="file"
                   multiple
@@ -328,8 +332,8 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                 />
                 <label htmlFor="input-imagenes" className="cursor-pointer">
                   <div className="text-5xl mb-3">📷</div>
-                  <p className="text-gray-600 font-medium">Clic para seleccionar imágenes</p>
-                  <p className="text-sm text-gray-400 mt-1">JPG, PNG, GIF (máx. 5MB cada una)</p>
+                  <p className="text-gray-600 dark:text-gray-300 font-medium">Clic para seleccionar imágenes</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">JPG, PNG, GIF (máx. 5MB cada una)</p>
                 </label>
               </div>
             </div>
@@ -337,8 +341,8 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
             {/* Preview nuevas */}
             {imagenesPreview.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs">Nuevas</span>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <span className="bg-brand-orange/10 text-brand-orange px-2 py-0.5 rounded-full text-xs">Nuevas</span>
                   {imagenesPreview.length} imagen(es)
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -347,7 +351,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                       <img
                         src={src}
                         alt={`Nueva ${i + 1}`}
-                        className="w-full h-full object-cover rounded-lg border shadow-sm"
+                        className="w-full h-full object-cover rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
                       />
                       <button
                         type="button"
@@ -365,8 +369,8 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
             {/* Existentes */}
             {id && imagenesExistentes.length > 0 && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                  <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs">Actuales</span>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full text-xs">Actuales</span>
                   {imagenesExistentes.length} imagen(es)
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -375,7 +379,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                       <img
                         src={img.url || img.ruta}
                         alt="Existente"
-                        className="w-full h-full object-cover rounded-lg border shadow-sm"
+                        className="w-full h-full object-cover rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
                         onError={(e) => {
                           e.target.src = "https://via.placeholder.com/150?text=Error";
                         }}
@@ -399,7 +403,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
             )}
 
             {imagenesExistentes.length === 0 && imagenesPreview.length === 0 && (
-              <div className="text-center py-10 text-gray-400">
+              <div className="text-center py-10 text-gray-400 dark:text-gray-600">
                 <div className="text-5xl mb-3">🖼️</div>
                 <p>No hay imágenes agregadas</p>
               </div>
@@ -410,12 +414,12 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
         {/* TAB: TOUR 360° */}
         {activeTab === '360' && id && (
           <div className="space-y-6">
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <div className="bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <span className="text-2xl">💡</span>
                 <div>
-                  <h4 className="font-medium text-purple-800">Tour Virtual 360°</h4>
-                  <p className="text-sm text-purple-600 mt-1">
+                  <h4 className="font-medium text-purple-800 dark:text-purple-300">Tour Virtual 360°</h4>
+                  <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">
                     Las imágenes 360° se gestionan desde el botón "🔄 Tour 360°" en la lista de habitaciones.
                   </p>
                 </div>
@@ -424,23 +428,23 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
 
             {imagenes360Existentes.length > 0 ? (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Imágenes 360° actuales ({imagenes360Existentes.length})
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {imagenes360Existentes.map((img, idx) => (
-                    <div key={img.id_imagen} className="border rounded-lg overflow-hidden bg-white shadow-sm">
+                    <div key={img.id_imagen} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800 shadow-sm">
                       <img
                         src={img.url}
                         alt={img.titulo || `360° ${idx + 1}`}
                         className="w-full h-32 object-cover"
                       />
                       <div className="p-3">
-                        <p className="font-medium text-gray-800">{img.titulo || `Escena ${idx + 1}`}</p>
+                        <p className="font-medium text-gray-800 dark:text-gray-100">{img.titulo || `Escena ${idx + 1}`}</p>
                         {img.descripcion && (
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{img.descripcion}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{img.descripcion}</p>
                         )}
-                        <span className="inline-block mt-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                        <span className="inline-block mt-2 text-xs bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-300 px-2 py-1 rounded">
                           Orden: {img.orden}
                         </span>
                       </div>
@@ -449,7 +453,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-10 text-gray-400">
+              <div className="text-center py-10 text-gray-400 dark:text-gray-600">
                 <div className="text-5xl mb-3">🔄</div>
                 <p>No hay imágenes 360° para esta habitación</p>
               </div>
@@ -458,12 +462,12 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
         )}
 
         {/* Botones */}
-        <div className="flex gap-3 mt-8 pt-6 border-t">
+        <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           {onCancel && (
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors"
+              className="flex-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 py-3 px-6 rounded-lg font-medium transition-colors"
             >
               Cancelar
             </button>
@@ -471,7 +475,7 @@ const HabitacionForm = ({ id, onSuccess, onCancel }) => {
           <button
             type="submit"
             disabled={cargando}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 bg-gradient-to-r from-brand-orange-deep to-brand-orange hover:brightness-110 text-white py-3 px-6 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {cargando ? (
               <>

@@ -111,7 +111,7 @@ const MisReservas = () => {
   if (!usuario || usuario.tipo !== 'cliente') return null;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-gray-950 pb-20 transition-colors">
       {/* Header Premium */}
       <div className="relative bg-gradient-to-br from-[#0F172A] via-[#1E3A8A] to-[#2563EB] overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
@@ -149,7 +149,7 @@ const MisReservas = () => {
         {/* Wave divisor */}
         <div className="absolute bottom-0 w-full overflow-hidden leading-[0]">
           <svg className="relative block w-[calc(100%+1.3px)] h-[40px] sm:h-[60px]" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,123.15,195.96,114.07,238.94,108.06,281.39,81.42,321.39,56.44Z" className="fill-[#F8FAFC]"></path>
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C59.71,118.08,130.83,123.15,195.96,114.07,238.94,108.06,281.39,81.42,321.39,56.44Z" className="fill-[#F8FAFC] dark:fill-gray-950"></path>
           </svg>
         </div>
       </div>
@@ -158,14 +158,14 @@ const MisReservas = () => {
         {loading && (
           <div className="flex flex-col items-center justify-center py-32">
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="mt-4 text-slate-500 font-medium">Buscando tus reservas...</p>
+            <p className="mt-4 text-slate-500 dark:text-slate-400 font-medium">Buscando tus reservas...</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center shadow-sm max-w-2xl mx-auto mt-10">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-3xl p-8 text-center shadow-sm max-w-2xl mx-auto mt-10">
             <div className="text-5xl mb-4">⚠️</div>
-            <p className="text-red-700 font-bold text-lg mb-6">{error}</p>
+            <p className="text-red-700 dark:text-red-400 font-bold text-lg mb-6">{error}</p>
             <button onClick={cargarReservas} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
               Intentar de nuevo
             </button>
@@ -180,7 +180,7 @@ const MisReservas = () => {
                   const esActiva = reserva.estado === 'confirmada' || reserva.estado === 'pendiente';
                   
                   return (
-                    <div key={reserva.id_reserva} className={`bg-white rounded-[2rem] overflow-hidden transition-all duration-300 border ${esActiva ? 'border-blue-100 shadow-xl hover:shadow-2xl' : 'border-slate-200 shadow-md opacity-90'}`}>
+                    <div key={reserva.id_reserva} className={`bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden transition-all duration-300 border ${esActiva ? 'border-blue-100 dark:border-blue-900 shadow-xl hover:shadow-2xl' : 'border-slate-200 dark:border-gray-800 shadow-md opacity-90'}`}>
                       <div className="flex flex-col lg:flex-row">
                         
                         {/* 🖼️ Imagen Responsiva */}
@@ -211,57 +211,57 @@ const MisReservas = () => {
                         </div>
 
                         {/* 📄 Contenido y Detalles */}
-                        <div className="w-full lg:w-3/5 xl:w-2/3 p-6 sm:p-8 flex flex-col justify-between bg-white relative z-20">
+                        <div className="w-full lg:w-3/5 xl:w-2/3 p-6 sm:p-8 flex flex-col justify-between bg-white dark:bg-gray-900 relative z-20">
                           <div>
-                            <div className="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
+                            <div className="flex justify-between items-start mb-6 border-b border-slate-100 dark:border-gray-800 pb-4">
                               <div>
-                                <p className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-1">Reserva #{reserva.id_reserva}</p>
-                                <p className="text-slate-500 text-sm">Realizada el {new Date(reserva.fecha_creacion || Date.now()).toLocaleDateString()}</p>
+                                <p className="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-1">Reserva #{reserva.id_reserva}</p>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm">Realizada el {new Date(reserva.fecha_creacion || Date.now()).toLocaleDateString()}</p>
                               </div>
                               <div className="text-right">
-                                <p className="text-3xl font-extrabold text-[#0F172A]">Bs. {parseFloat(reserva.total).toFixed(2)}</p>
-                                <p className="text-sm text-slate-500 font-medium">Total por {reserva.noches} noches</p>
+                                <p className="text-3xl font-extrabold text-[#0F172A] dark:text-gray-100">Bs. {parseFloat(reserva.total).toFixed(2)}</p>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Total por {reserva.noches} noches</p>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                                <p className="text-xs text-slate-400 font-bold uppercase mb-1">Check-in</p>
-                                <p className="font-bold text-slate-800">{formatearFechaStr(reserva.fecha_entrada)}</p>
-                                <p className="text-xs text-slate-500 mt-1">14:00 hrs</p>
+                              <div className="bg-slate-50 dark:bg-gray-800 rounded-2xl p-4 border border-slate-100 dark:border-gray-700">
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase mb-1">Check-in</p>
+                                <p className="font-bold text-slate-800 dark:text-slate-200">{formatearFechaStr(reserva.fecha_entrada)}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">14:00 hrs</p>
                               </div>
-                              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                                <p className="text-xs text-slate-400 font-bold uppercase mb-1">Check-out</p>
-                                <p className="font-bold text-slate-800">{formatearFechaStr(reserva.fecha_salida)}</p>
-                                <p className="text-xs text-slate-500 mt-1">11:00 hrs</p>
+                              <div className="bg-slate-50 dark:bg-gray-800 rounded-2xl p-4 border border-slate-100 dark:border-gray-700">
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase mb-1">Check-out</p>
+                                <p className="font-bold text-slate-800 dark:text-slate-200">{formatearFechaStr(reserva.fecha_salida)}</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">11:00 hrs</p>
                               </div>
-                              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                                <p className="text-xs text-slate-400 font-bold uppercase mb-1">Huéspedes</p>
-                                <p className="font-bold text-slate-800">{reserva.cantidad_adultos} Ad, {reserva.cantidad_ninos} Ni</p>
+                              <div className="bg-slate-50 dark:bg-gray-800 rounded-2xl p-4 border border-slate-100 dark:border-gray-700">
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase mb-1">Huéspedes</p>
+                                <p className="font-bold text-slate-800 dark:text-slate-200">{reserva.cantidad_adultos} Ad, {reserva.cantidad_ninos} Ni</p>
                               </div>
-                              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                                <p className="text-xs text-slate-400 font-bold uppercase mb-1">Llegada Est.</p>
-                                <p className="font-bold text-slate-800">{reserva.hora_llegada ? reserva.hora_llegada.substring(0,5) : 'No def.'}</p>
+                              <div className="bg-slate-50 dark:bg-gray-800 rounded-2xl p-4 border border-slate-100 dark:border-gray-700">
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase mb-1">Llegada Est.</p>
+                                <p className="font-bold text-slate-800 dark:text-slate-200">{reserva.hora_llegada ? reserva.hora_llegada.substring(0,5) : 'No def.'}</p>
                               </div>
                             </div>
                           </div>
 
                           {/* Action Area */}
-                          <div className="mt-4 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-                            
-                            <div className="w-full sm:w-auto text-sm text-slate-500">
+                          <div className="mt-4 pt-6 border-t border-slate-100 dark:border-gray-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+
+                            <div className="w-full sm:w-auto text-sm text-slate-500 dark:text-slate-400">
                               {reserva.estado === 'pendiente' && (
-                                <p className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-xl font-medium">
+                                <p className="flex items-center gap-2 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-4 py-2 rounded-xl font-medium">
                                   <span>💳</span> Pago pendiente
                                 </p>
                               )}
                               {reserva.estado === 'confirmada' && (
-                                <p className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl font-medium">
+                                <p className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 rounded-xl font-medium">
                                   <span>🎉</span> Todo listo para tu llegada
                                 </p>
                               )}
                               {reserva.estado === 'cancelada' && (
-                                <p className="flex items-center gap-2 text-rose-600 bg-rose-50 px-4 py-2 rounded-xl font-medium">
+                                <p className="flex items-center gap-2 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-4 py-2 rounded-xl font-medium">
                                   <span>🚫</span> Esta reserva fue cancelada
                                 </p>
                               )}
@@ -295,7 +295,7 @@ const MisReservas = () => {
                               {(reserva.estado === 'pendiente' || reserva.estado === 'confirmada') && (
                                 <button
                                   onClick={() => handleCancelarReserva(reserva.id_reserva)}
-                                  className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-600 hover:text-white transition-all duration-300 text-sm"
+                                  className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-600 hover:text-white transition-all duration-300 text-sm"
                                 >
                                   Cancelar Reserva
                                 </button>
@@ -311,10 +311,10 @@ const MisReservas = () => {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-20 px-4">
-                <div className="bg-white p-10 rounded-[3rem] shadow-xl text-center max-w-lg border border-slate-100">
+                <div className="bg-white dark:bg-gray-900 p-10 rounded-[3rem] shadow-xl text-center max-w-lg border border-slate-100 dark:border-gray-800">
                   <div className="text-8xl mb-6 select-none">🧳</div>
-                  <h3 className="text-3xl font-extrabold text-[#0F172A] mb-4">Aún no tienes reservas</h3>
-                  <p className="text-slate-500 mb-8 text-lg">Tu próxima gran aventura o viaje de negocios comienza aquí. ¡Descubre nuestras habitaciones!</p>
+                  <h3 className="text-3xl font-extrabold text-[#0F172A] dark:text-gray-100 mb-4">Aún no tienes reservas</h3>
+                  <p className="text-slate-500 dark:text-slate-400 mb-8 text-lg">Tu próxima gran aventura o viaje de negocios comienza aquí. ¡Descubre nuestras habitaciones!</p>
                   <Link
                     to="/"
                     className="inline-flex items-center justify-center w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-blue-600/30 hover:-translate-y-1 text-lg"

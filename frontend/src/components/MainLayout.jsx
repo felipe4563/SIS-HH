@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext.jsx';
 import { AbilityContext } from '../context/AbilityContext.jsx';
+import { ThemeContext } from '../context/ThemeContext.jsx';
 import { Outlet, useLocation, Link } from 'react-router-dom';
 
 /* ── SVG Icon components ── */
@@ -72,14 +73,6 @@ const IconChart = () => (
   </svg>
 );
 
-const IconBuilding = ({ className = 'w-6 h-6' }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
-      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2M5 21H3
-         M9 7h1m4 0h1M9 11h1m4 0h1M9 15h1m4 0h1M10 21v-4h4v4" />
-  </svg>
-);
-
 const IconCrown = () => (
   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
     <path d="M2 19l2.5-11L9 13l3-9 3 9 4.5-5L22 19H2z" />
@@ -110,13 +103,39 @@ const IconBroom = () => (
   </svg>
 );
 
+const IconMenu = ({ className = 'w-6 h-6' }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+);
+
+const IconClose = ({ className = 'w-6 h-6' }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const IconSun = ({ className = 'h-4 w-4' }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+  </svg>
+);
+
+const IconMoon = ({ className = 'h-4 w-4' }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+  </svg>
+);
+
 /* ─────────────────────────────────────────── */
 
 const MainLayout = () => {
   const { usuario, logout } = useContext(AuthContext);
   const ability = useContext(AbilityContext);
+  const { isDark, toggleTheme } = useContext(ThemeContext);
   const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const cerrarSidebar = () => setSidebarAbierto(false);
 
   const menuItems = [
     { name: 'Dashboard',    icon: <IconDashboard />, path: '/sistema',              action: 'read', subject: 'Dashboard'       },
@@ -140,191 +159,154 @@ const MainLayout = () => {
   const getRolDisplay = () => usuario?.nombre_rol || 'Usuario';
   const getInitials = () => usuario?.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'U';
   const getPageTitle = () => menuFiltrado.find(item => isActive(item.path))?.name || 'Sistema';
+  const logoSrc = isDark ? '/modooscuro.png' : '/modoclaro.png';
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar Desktop */}
-      <div className="hidden lg:flex w-64 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 shadow-2xl flex-col">
-        {/* Logo */}
-        <div className="p-4 sm:p-6 border-b border-blue-700/50 backdrop-blur-sm">
-          <Link to="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-xl ring-2 ring-amber-300/50">
-              <IconBuilding className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <div className="flex items-baseline">
-                <span className="text-base sm:text-lg font-bold text-white tracking-wide">HOSTAL</span>
-                <span className="text-base sm:text-lg font-bold text-amber-400 ml-1 tracking-wide">SUR</span>
-                <span className="text-base sm:text-lg font-bold text-amber-400 relative tracking-wide">
-                  I
-                  <span className="absolute -top-2 -right-2 sm:-top-3 sm:-right-2.5 text-amber-300">
-                    <IconCrown />
-                  </span>
-                </span>
+    <div className="flex h-screen bg-brand-sand dark:bg-gray-950 transition-colors duration-300">
+      {/* Sidebar — empuja el contenido al abrir/cerrar, el usuario decide si lo muestra */}
+      <div
+        className={`flex-shrink-0 overflow-hidden transition-all duration-300 ${
+          sidebarAbierto ? 'w-72' : 'w-0'
+        }`}
+      >
+        <div className="w-72 h-full bg-white dark:bg-gray-900 shadow-md border-r border-brand-mist/30 dark:border-white/10 flex flex-col">
+          {/* Logo */}
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-brand-mist/30 dark:border-white/10">
+            <Link to="/" className="flex min-w-0 items-center gap-2.5 hover:opacity-80 transition-opacity">
+              <img src={logoSrc} alt="H&H Logo" className="h-9 w-9 flex-shrink-0 object-contain" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-black tracking-wide text-brand-charcoal dark:text-white">
+                  H&H <span className="text-brand-orange">Residencial</span>
+                </p>
+                <p className="text-xs text-brand-mist dark:text-white/50">Sistema de Gestión</p>
               </div>
-              <p className="text-blue-300 text-xs mt-1 font-medium">Sistema de Gestión</p>
-            </div>
-          </Link>
-        </div>
-
-        {/* Menú de Navegación */}
-        <nav className="p-3 sm:p-4 space-y-1 sm:space-y-2 flex-1 overflow-y-auto">
-          {menuFiltrado.length > 0 ? (
-            menuFiltrado.map((item) => (
-              <Link
-                key={item.name}
-                to={item.path}
-                className={`flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 group ${
-                  isActive(item.path)
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-900/50 scale-105'
-                    : 'text-blue-100 hover:bg-blue-700/70 hover:text-white hover:shadow-md'
-                }`}
-              >
-                <span className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
-                  {item.icon}
-                </span>
-                <span className="font-medium text-sm sm:text-base">{item.name}</span>
-                {isActive(item.path) && (
-                  <div className="ml-auto w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
-                )}
-              </Link>
-            ))
-          ) : (
-            <div className="text-blue-300 text-sm text-center py-4">
-              No hay módulos disponibles
-            </div>
-          )}
-        </nav>
-
-        {/* Información del Usuario y Logout */}
-        <div className="p-3 sm:p-4 border-t border-blue-700/50 bg-blue-900/50 backdrop-blur-sm">
-          <div className="flex items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4 p-2 rounded-xl bg-blue-800/40">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-semibold text-sm sm:text-base shadow-lg ring-2 ring-amber-300/30">
-              {getInitials()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white text-xs sm:text-sm font-semibold truncate">{usuario?.nombre || 'Usuario'}</p>
-              <p className="text-blue-300 text-xs capitalize truncate font-medium">{getRolDisplay()}</p>
-            </div>
+            </Link>
+            <button
+              onClick={cerrarSidebar}
+              className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-brand-mist dark:text-white/50 hover:bg-brand-orange/10 dark:hover:bg-white/10 hover:text-brand-charcoal dark:hover:text-white transition-colors"
+              aria-label="Cerrar menú"
+            >
+              <IconClose className="w-5 h-5" />
+            </button>
           </div>
 
-          <button
-            onClick={logout}
-            className="w-full flex items-center justify-center space-x-2 sm:space-x-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 sm:py-3 px-3 sm:px-4 rounded-xl font-semibold transition-all duration-300 hover:shadow-xl hover:shadow-red-900/50 transform hover:-translate-y-1 active:translate-y-0 text-sm sm:text-base"
-          >
-            <IconLogout className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span>Cerrar Sesión</span>
-          </button>
+          {/* Menú de Navegación */}
+          <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
+            {menuFiltrado.length > 0 ? (
+              menuFiltrado.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group ${
+                    isActive(item.path)
+                      ? 'bg-brand-orange text-white shadow-lg shadow-brand-orange/30'
+                      : 'text-brand-charcoal/70 dark:text-white/70 hover:bg-brand-orange/10 dark:hover:bg-white/10 hover:text-brand-charcoal dark:hover:text-white'
+                  }`}
+                >
+                  <span className="flex-shrink-0 transition-transform duration-200 group-hover:scale-110">
+                    {item.icon}
+                  </span>
+                  <span className="font-medium text-sm whitespace-nowrap">{item.name}</span>
+                </Link>
+              ))
+            ) : (
+              <div className="text-brand-mist dark:text-white/50 text-sm text-center py-4">
+                No hay módulos disponibles
+              </div>
+            )}
+
+            <Link
+              to="/"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-brand-charcoal/70 dark:text-white/70 hover:bg-brand-orange/10 dark:hover:bg-white/10 hover:text-brand-charcoal dark:hover:text-white transition-all duration-200 mt-2 border-t border-brand-mist/20 dark:border-white/10 pt-4"
+            >
+              <IconHome className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium text-sm whitespace-nowrap">Página Principal</span>
+            </Link>
+          </nav>
+
+          {/* Toggle de tema */}
+          <div className="px-3 pb-1">
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-brand-charcoal/70 dark:text-white/70 hover:bg-brand-orange/10 dark:hover:bg-white/10 hover:text-brand-charcoal dark:hover:text-white transition-colors"
+            >
+              {isDark ? <IconSun className="h-5 w-5 flex-shrink-0" /> : <IconMoon className="h-5 w-5 flex-shrink-0" />}
+              <span className="font-medium text-sm whitespace-nowrap">{isDark ? 'Modo claro' : 'Modo oscuro'}</span>
+            </button>
+          </div>
+
+          {/* Información del Usuario y Logout */}
+          <div className="p-3 border-t border-brand-mist/30 dark:border-white/10">
+            <div className="flex items-center gap-2.5 mb-3 p-2 rounded-xl bg-brand-sand dark:bg-white/5">
+              <div className="w-9 h-9 flex-shrink-0 bg-brand-orange rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+                {getInitials()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-brand-charcoal dark:text-white text-sm font-semibold truncate">{usuario?.nombre || 'Usuario'}</p>
+                <p className="text-brand-mist dark:text-white/50 text-xs capitalize truncate font-medium">{getRolDisplay()}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={logout}
+              className="w-full flex items-center justify-center gap-2.5 bg-red-500 hover:bg-red-600 text-white py-2.5 px-3 rounded-xl font-semibold text-sm transition-colors duration-200"
+            >
+              <IconLogout className="w-4 h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">Cerrar Sesión</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Contenido Principal */}
       <div className="flex-1 flex flex-col overflow-hidden w-full min-w-0">
-        <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-gray-200/50">
+        <header className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-b border-brand-mist/30 dark:border-gray-700">
           <div className="flex items-center justify-between px-3 sm:px-4 md:px-6 py-3 sm:py-4">
             <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 min-w-0">
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-1 sm:p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 flex-shrink-0 active:scale-95"
+                onClick={() => setSidebarAbierto(prev => !prev)}
+                className="p-1 sm:p-2 text-brand-charcoal dark:text-gray-300 hover:text-brand-orange hover:bg-brand-orange/10 rounded-xl transition-all duration-300 flex-shrink-0 active:scale-95"
+                aria-label={sidebarAbierto ? 'Cerrar menú' : 'Abrir menú'}
               >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
+                <IconMenu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-900 to-blue-600 bg-clip-text text-transparent truncate">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-charcoal dark:text-gray-100 truncate">
                   {getPageTitle()}
                 </h2>
-                <p className="text-gray-500 text-xs sm:text-sm md:text-base truncate font-medium">Sistema de Gestión Hotelera</p>
+                <p className="text-brand-mist dark:text-gray-500 text-xs sm:text-sm truncate font-medium">Sistema de Gestión Hotelera</p>
               </div>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4 flex-shrink-0">
-              <Link
-                to="/"
-                className="hidden sm:flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300"
-                title="Ir a página principal"
+              <button
+                onClick={toggleTheme}
+                aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-mist/40 dark:border-gray-600 bg-brand-orange/10 dark:bg-brand-orange/20 text-brand-charcoal dark:text-gray-300 transition-all duration-200 hover:bg-brand-orange/20"
               >
-                <IconHome />
-                <span className="text-sm font-medium hidden md:inline">Inicio</span>
-              </Link>
+                {isDark ? <IconSun /> : <IconMoon />}
+              </button>
 
-              <div className="lg:hidden flex items-center space-x-1 sm:space-x-2">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-lg ring-2 ring-amber-300/30">
-                  {getInitials()}
-                </div>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-brand-orange rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-lg">
+                {getInitials()}
               </div>
             </div>
           </div>
         </header>
 
-        {/* Menú móvil */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-xl">
-            <div className="px-3 sm:px-4 py-2 sm:py-3 space-y-1">
-              {menuFiltrado.length > 0 ? (
-                <>
-                  {menuFiltrado.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all duration-300 ${
-                        isActive(item.path)
-                          ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-l-4 border-blue-500 shadow-md'
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100'
-                      }`}
-                    >
-                      <span className="flex-shrink-0">{item.icon}</span>
-                      <span className="flex-1">{item.name}</span>
-                      {isActive(item.path) && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                      )}
-                    </Link>
-                  ))}
-
-                  <Link
-                    to="/"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 active:bg-gray-100 transition-all duration-300 mt-2"
-                  >
-                    <IconHome />
-                    <span className="flex-1">Página Principal</span>
-                  </Link>
-                </>
-              ) : (
-                <div className="text-gray-500 text-sm text-center py-4">
-                  No hay módulos disponibles
-                </div>
-              )}
-
-              <button
-                onClick={() => { logout(); setIsMobileMenuOpen(false); }}
-                className="flex items-center space-x-2 sm:space-x-3 w-full px-3 sm:px-4 py-2 sm:py-3 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-xl transition-all duration-300 mt-2 sm:mt-4 text-sm sm:text-base font-semibold"
-              >
-                <IconLogout />
-                <span>Cerrar Sesión</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-blue-50 via-gray-50 to-amber-50 p-3 sm:p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-brand-sand dark:bg-gray-950 p-3 sm:p-4 md:p-6 transition-colors duration-300">
           <div className="max-w-full">
             <Outlet />
           </div>
         </main>
 
         {/* Footer Móvil */}
-        <footer className="lg:hidden bg-white/90 backdrop-blur-md border-t border-gray-200/50 py-2 px-3 sm:px-4 shadow-lg">
+        <footer className="lg:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-brand-mist/30 dark:border-gray-700 py-2 px-3 sm:px-4 shadow-lg">
           <div className="flex justify-between items-center text-xs">
             <div className="flex items-center space-x-1.5">
-              <div className="w-5 h-5 bg-gradient-to-br from-amber-400 to-amber-600 rounded-md flex items-center justify-center shadow-md text-white">
-                <IconBuilding className="w-3 h-3" />
-              </div>
-              <span className="font-bold text-gray-700">HOSTAL SURI</span>
+              <img src={logoSrc} alt="H&H" className="h-5 w-5 object-contain" />
+              <span className="font-bold text-brand-charcoal dark:text-gray-200">H&H Residencial</span>
             </div>
-            <span className="text-gray-600 capitalize truncate ml-2 font-medium">{getRolDisplay()}</span>
+            <span className="text-brand-mist dark:text-gray-500 capitalize truncate ml-2 font-medium">{getRolDisplay()}</span>
           </div>
         </footer>
       </div>

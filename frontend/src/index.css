@@ -1,6 +1,43 @@
 
 @config "../tailwind.config.js";
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Premium base styles ─────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #111827;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(240, 163, 10, 0.3);
+  color: inherit;
+}
+
+.dark ::selection {
+  background-color: rgba(240, 163, 10, 0.4);
+}
 
 @keyframes fade-up {
   from {
@@ -70,3 +107,60 @@
   animation: pulse-glow 2.6s ease-in-out infinite;
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(200, 200, 200, 0.15) 25%,
+    rgba(200, 200, 200, 0.35) 50%,
+    rgba(200, 200, 200, 0.15) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(100, 100, 100, 0.15) 25%,
+    rgba(100, 100, 100, 0.35) 50%,
+    rgba(100, 100, 100, 0.15) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-scale-in-delay-1 {
+  animation: scaleIn 0.4s ease-out 0.1s both;
+}
+
+.animate-scale-in-delay-2 {
+  animation: scaleIn 0.4s ease-out 0.2s both;
+}
+
+.animate-scale-in-delay-3 {
+  animation: scaleIn 0.4s ease-out 0.3s both;
+}
+
+.animate-scale-in-delay-4 {
+  animation: scaleIn 0.4s ease-out 0.4s both;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

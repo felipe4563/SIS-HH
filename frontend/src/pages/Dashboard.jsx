@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
@@ -6,6 +6,7 @@ import {
 import {
   getDashboardOverview
 } from '../services/dashboard.js';
+import { ThemeContext } from '../context/ThemeContext';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
@@ -28,8 +29,8 @@ const Icon = ({ name, className = 'h-6 w-6' }) => (
 const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-xl text-sm">
-      <p className="font-semibold text-slate-700 mb-1">{label}</p>
+    <div className="rounded-xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 shadow-xl text-sm">
+      <p className="font-semibold text-slate-700 dark:text-gray-200 mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }} className="font-medium">
           {p.name}: {prefix}{typeof p.value === 'number' ? p.value.toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : p.value}{suffix}
@@ -40,46 +41,46 @@ const CustomTooltip = ({ active, payload, label, prefix = '', suffix = '' }) => 
 };
 
 const StatCard = ({ icon, label, value, sub, gradient }) => (
-  <div className={`relative overflow-hidden rounded-2xl p-5 text-white shadow-lg ${gradient}`}>
+  <div className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 text-white shadow-lg ${gradient}`}>
     <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10" />
     <div className="absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-white/5" />
     <div className="relative">
       <div className="mb-3 flex items-center justify-between">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 text-2xl shadow-inner">
+        <span className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-white/20 text-2xl shadow-inner">
           {icon}
         </span>
         <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold">{sub}</span>
       </div>
-      <p className="text-3xl font-black tracking-tight">{value}</p>
+      <p className="text-2xl sm:text-3xl font-black tracking-tight">{value}</p>
       <p className="mt-1 text-sm font-medium text-white/80">{label}</p>
     </div>
   </div>
 );
 
 const KpiCard = ({ label, value, description, icon }) => (
-  <div className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+  <div className="flex items-start gap-4 rounded-2xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 sm:p-5 shadow-sm hover:shadow-md dark:hover:shadow-none transition-shadow">
+    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-300">
       {icon}
     </div>
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">{label}</p>
-      <p className="mt-0.5 text-2xl font-black text-slate-900">{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{description}</p>
+    <div className="min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-gray-500">{label}</p>
+      <p className="mt-0.5 text-xl sm:text-2xl font-black text-slate-900 dark:text-gray-100">{value}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">{description}</p>
     </div>
   </div>
 );
 
 const SectionCard = ({ title, children, className = '' }) => (
-  <div className={`rounded-2xl border border-slate-100 bg-white shadow-sm ${className}`}>
-    <div className="border-b border-slate-100 px-5 py-4">
-      <h3 className="text-base font-bold text-slate-800">{title}</h3>
+  <div className={`rounded-2xl border border-slate-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm ${className}`}>
+    <div className="border-b border-slate-100 dark:border-gray-700 px-4 sm:px-5 py-3.5 sm:py-4">
+      <h3 className="text-sm sm:text-base font-bold text-slate-800 dark:text-gray-100">{title}</h3>
     </div>
-    <div className="p-5">{children}</div>
+    <div className="p-4 sm:p-5">{children}</div>
   </div>
 );
 
 const EmptyState = ({ text }) => (
-  <div className="flex h-52 flex-col items-center justify-center gap-2 text-slate-400">
+  <div className="flex h-52 flex-col items-center justify-center gap-2 text-slate-400 dark:text-gray-600">
     <svg className="h-10 w-10 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
     </svg>
@@ -88,6 +89,7 @@ const EmptyState = ({ text }) => (
 );
 
 const Dashboard = () => {
+  const { isDark } = useContext(ThemeContext);
   const [periodo, setPeriodo] = useState('mes');
   const [overview, setOverview] = useState(null);
   const [estadisticasGenerales, setEstadisticasGenerales] = useState(null);
@@ -134,26 +136,32 @@ const Dashboard = () => {
   const fmtBs = (n) =>
     `Bs. ${Number(n || 0).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+  // Recharts pinta SVG con props, no con clases de Tailwind — hay que resolver
+  // los colores a mano según el tema para que ejes/grillas/tooltip se vean bien.
+  const gridStroke = isDark ? '#334155' : '#f1f5f9';
+  const tickFill = '#94a3b8'; // slate-400 tiene contraste suficiente en ambos fondos
+  const tickFillMuted = isDark ? '#cbd5e1' : '#64748b';
+
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-gray-950">
       <div className="text-center">
         <div className="mx-auto mb-4 h-14 w-14 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
-        <p className="font-semibold text-slate-600">Cargando dashboard…</p>
+        <p className="font-semibold text-slate-600 dark:text-gray-400">Cargando dashboard…</p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
       {/* Header */}
-      <div className="border-b border-slate-200 bg-white px-6 py-5 shadow-sm">
+      <div className="border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 sm:px-6 py-4 sm:py-5 shadow-sm">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 sm:text-3xl">Panel de control</h1>
-            <p className="mt-0.5 text-sm text-slate-500">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-gray-100">Panel de control</h1>
+            <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-gray-400">
               Estadísticas y métricas del hostal
               {overview?.rango?.inicio && (
-                <span className="ml-2 rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-600">
+                <span className="ml-2 inline-block rounded-full bg-indigo-50 dark:bg-indigo-500/15 px-2.5 py-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
                   {new Date(overview.rango.inicio).toLocaleDateString('es-ES')} — {new Date(overview.rango.fin).toLocaleDateString('es-ES')}
                 </span>
               )}
@@ -161,15 +169,15 @@ const Dashboard = () => {
           </div>
 
           {/* Filtros */}
-          <div className="flex gap-1.5 rounded-xl bg-slate-100 p-1">
+          <div className="flex gap-1.5 rounded-xl bg-slate-100 dark:bg-gray-800 p-1 self-start sm:self-auto">
             {[['semana', 'Semana'], ['mes', 'Mes'], ['año', 'Año']].map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setPeriodo(key)}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+                className={`rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition-all ${
                   periodo === key
-                    ? 'bg-white text-indigo-700 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                    ? 'bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm'
+                    : 'text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
                 }`}
               >
                 {label}
@@ -181,9 +189,9 @@ const Dashboard = () => {
 
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-5 flex items-center justify-between">
-            <p className="font-semibold text-red-700">{error}</p>
-            <button onClick={cargarDatos} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition">
+          <div className="rounded-2xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20 p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-semibold text-red-700 dark:text-red-400">{error}</p>
+            <button onClick={cargarDatos} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition self-start sm:self-auto">
               Reintentar
             </button>
           </div>
@@ -258,7 +266,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend iconType="circle" iconSize={10} />
+                    <Legend iconType="circle" iconSize={10} wrapperStyle={{ color: isDark ? '#cbd5e1' : undefined }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -276,7 +284,7 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend iconType="circle" iconSize={10} />
+                    <Legend iconType="circle" iconSize={10} wrapperStyle={{ color: isDark ? '#cbd5e1' : undefined }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -300,12 +308,12 @@ const Dashboard = () => {
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="periodo" tick={{ fontSize: 11, fill: '#94a3b8' }} angle={periodo !== 'año' ? -35 : 0} textAnchor={periodo !== 'año' ? 'end' : 'middle'} height={periodo !== 'año' ? 70 : 40} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="periodo" tick={{ fontSize: 11, fill: tickFill }} angle={periodo !== 'año' ? -35 : 0} textAnchor={periodo !== 'año' ? 'end' : 'middle'} height={periodo !== 'año' ? 70 : 40} />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: tickFill }} />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: tickFill }} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend iconType="circle" iconSize={10} />
+                  <Legend iconType="circle" iconSize={10} wrapperStyle={{ color: isDark ? '#cbd5e1' : undefined }} />
                   <Area yAxisId="left" type="monotone" dataKey="cantidad" stroke="#6366f1" strokeWidth={2} fill="url(#gReservas)" name="Reservas" dot={{ r: 3, fill: '#6366f1' }} />
                   <Area yAxisId="right" type="monotone" dataKey="ingresos" stroke="#10b981" strokeWidth={2} fill="url(#gIngresos)" name="Ingresos (Bs.)" dot={{ r: 3, fill: '#10b981' }} />
                 </AreaChart>
@@ -320,9 +328,9 @@ const Dashboard = () => {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ingresosPorPeriodo} barSize={24}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: '#94a3b8' }} angle={periodo !== 'año' ? -35 : 0} textAnchor={periodo !== 'año' ? 'end' : 'middle'} height={periodo !== 'año' ? 70 : 40} />
-                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: tickFill }} angle={periodo !== 'año' ? -35 : 0} textAnchor={periodo !== 'año' ? 'end' : 'middle'} height={periodo !== 'año' ? 70 : 40} />
+                  <YAxis tick={{ fontSize: 11, fill: tickFill }} />
                   <Tooltip formatter={(v) => [fmtBs(v), 'Ingresos']} />
                   <Bar dataKey="total" name="Ingresos (Bs.)" radius={[6, 6, 0, 0]}>
                     {ingresosPorPeriodo.map((_, i) => (
@@ -342,9 +350,9 @@ const Dashboard = () => {
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={habitacionesMasReservadas} layout="vertical" barSize={14}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis type="category" dataKey="numero" width={54} tickFormatter={(v) => `Hab. ${v}`} tick={{ fontSize: 11, fill: '#64748b' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} horizontal={false} />
+                    <XAxis type="number" tick={{ fontSize: 11, fill: tickFill }} />
+                    <YAxis type="category" dataKey="numero" width={54} tickFormatter={(v) => `Hab. ${v}`} tick={{ fontSize: 11, fill: tickFillMuted }} />
                     <Tooltip formatter={(v) => [v, 'Reservas']} />
                     <Bar dataKey="total_reservas" name="Reservas" radius={[0, 6, 6, 0]}>
                       {habitacionesMasReservadas.map((_, i) => (
@@ -362,11 +370,11 @@ const Dashboard = () => {
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={metodosPago} barGap={4} barSize={20}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="metodo_pago" tick={{ fontSize: 11, fill: '#94a3b8' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                    <XAxis dataKey="metodo_pago" tick={{ fontSize: 11, fill: tickFill }} />
+                    <YAxis tick={{ fontSize: 11, fill: tickFill }} />
                     <Tooltip formatter={(v, name) => [name === 'Monto Total (Bs.)' ? fmtBs(v) : v, name]} />
-                    <Legend iconType="circle" iconSize={10} />
+                    <Legend iconType="circle" iconSize={10} wrapperStyle={{ color: isDark ? '#cbd5e1' : undefined }} />
                     <Bar dataKey="cantidad" fill="#6366f1" name="Cantidad" radius={[4, 4, 0, 0]} />
                     <Bar dataKey="total_monto" fill="#10b981" name="Monto Total (Bs.)" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -383,7 +391,7 @@ const Dashboard = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    <tr className="border-b border-slate-100 dark:border-gray-700 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-gray-500">
                       <th className="pb-3 pr-4">#</th>
                       <th className="pb-3 pr-4">Cliente</th>
                       <th className="pb-3 pr-4">Correo</th>
@@ -391,18 +399,18 @@ const Dashboard = () => {
                       <th className="pb-3 text-right">Gasto</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-slate-50 dark:divide-gray-800">
                     {clientesFrecuentes.map((c, idx) => (
-                      <tr key={c.correo || idx} className="group hover:bg-slate-50 transition-colors">
-                        <td className="py-3 pr-4 text-slate-400 font-medium">#{idx + 1}</td>
-                        <td className="py-3 pr-4 font-semibold text-slate-800">{c.nombre} {c.apellido}</td>
-                        <td className="py-3 pr-4 text-slate-500 text-xs">{c.correo || '—'}</td>
+                      <tr key={c.correo || idx} className="group hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td className="py-3 pr-4 text-slate-400 dark:text-gray-500 font-medium">#{idx + 1}</td>
+                        <td className="py-3 pr-4 font-semibold text-slate-800 dark:text-gray-100">{c.nombre} {c.apellido}</td>
+                        <td className="py-3 pr-4 text-slate-500 dark:text-gray-400 text-xs">{c.correo || '—'}</td>
                         <td className="py-3 pr-4 text-center">
-                          <span className="inline-flex items-center justify-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-bold text-indigo-700">
+                          <span className="inline-flex items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/15 px-2.5 py-0.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
                             {c.total_reservas}
                           </span>
                         </td>
-                        <td className="py-3 text-right font-semibold text-emerald-700">
+                        <td className="py-3 text-right font-semibold text-emerald-700 dark:text-emerald-400">
                           {fmtBs(c.gasto_total)}
                         </td>
                       </tr>
@@ -416,49 +424,49 @@ const Dashboard = () => {
           <SectionCard title="Próximos 7 días">
             <div className="space-y-5">
               <div>
-                <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-600">
+                <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                   <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
                   Entradas
                 </p>
                 {proximasEntradas.length > 0 ? (
                   <ul className="space-y-2">
                     {proximasEntradas.map((r) => (
-                      <li key={`in-${r.id_reserva}`} className="flex items-center justify-between rounded-xl bg-emerald-50 px-3 py-2.5">
+                      <li key={`in-${r.id_reserva}`} className="flex items-center justify-between rounded-xl bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2.5">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-800">{r.cliente}</p>
-                          <p className="text-xs text-slate-500">Hab. {r.habitacion} · {r.estado}</p>
+                          <p className="truncate text-sm font-semibold text-slate-800 dark:text-gray-100">{r.cliente}</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400">Hab. {r.habitacion} · {r.estado}</p>
                         </div>
                         <div className="ml-3 text-right flex-shrink-0">
-                          <p className="text-xs font-bold text-slate-700">{new Date(r.fecha_entrada).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</p>
-                          <p className="text-xs text-emerald-700 font-semibold">{fmtBs(r.total)}</p>
+                          <p className="text-xs font-bold text-slate-700 dark:text-gray-300">{new Date(r.fecha_entrada).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</p>
+                          <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold">{fmtBs(r.total)}</p>
                         </div>
                       </li>
                     ))}
                   </ul>
-                ) : <p className="text-xs text-slate-400 italic">Sin entradas programadas</p>}
+                ) : <p className="text-xs text-slate-400 dark:text-gray-600 italic">Sin entradas programadas</p>}
               </div>
 
               <div>
-                <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-500">
+                <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400">
                   <span className="flex h-2 w-2 rounded-full bg-rose-500" />
                   Salidas
                 </p>
                 {proximasSalidas.length > 0 ? (
                   <ul className="space-y-2">
                     {proximasSalidas.map((r) => (
-                      <li key={`out-${r.id_reserva}`} className="flex items-center justify-between rounded-xl bg-rose-50 px-3 py-2.5">
+                      <li key={`out-${r.id_reserva}`} className="flex items-center justify-between rounded-xl bg-rose-50 dark:bg-rose-500/10 px-3 py-2.5">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-800">{r.cliente}</p>
-                          <p className="text-xs text-slate-500">Hab. {r.habitacion} · {r.estado}</p>
+                          <p className="truncate text-sm font-semibold text-slate-800 dark:text-gray-100">{r.cliente}</p>
+                          <p className="text-xs text-slate-500 dark:text-gray-400">Hab. {r.habitacion} · {r.estado}</p>
                         </div>
                         <div className="ml-3 text-right flex-shrink-0">
-                          <p className="text-xs font-bold text-slate-700">{new Date(r.fecha_salida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</p>
-                          <p className="text-xs text-rose-600 font-semibold">{fmtBs(r.total)}</p>
+                          <p className="text-xs font-bold text-slate-700 dark:text-gray-300">{new Date(r.fecha_salida).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</p>
+                          <p className="text-xs text-rose-600 dark:text-rose-400 font-semibold">{fmtBs(r.total)}</p>
                         </div>
                       </li>
                     ))}
                   </ul>
-                ) : <p className="text-xs text-slate-400 italic">Sin salidas programadas</p>}
+                ) : <p className="text-xs text-slate-400 dark:text-gray-600 italic">Sin salidas programadas</p>}
               </div>
             </div>
           </SectionCard>

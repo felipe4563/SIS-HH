@@ -118,8 +118,8 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 flex items-center justify-between shrink-0">
           <div>
@@ -139,23 +139,23 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+
           {/* Formulario para subir */}
-          <div className="bg-purple-50 rounded-xl p-5 border border-purple-200">
-            <h3 className="font-semibold text-purple-800 mb-4 flex items-center gap-2">
+          <div className="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-4 sm:p-5 border border-purple-200 dark:border-purple-800">
+            <h3 className="font-semibold text-purple-800 dark:text-purple-300 mb-4 flex items-center gap-2">
               📤 Subir Nueva Imagen 360°
             </h3>
 
             <form onSubmit={handleUpload} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
+
                 {/* Selector de archivo */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Imagen Panorámica *
                   </label>
-                  <div className="border-2 border-dashed border-purple-300 rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer">
+                  <div className="border-2 border-dashed border-purple-300 dark:border-purple-700 rounded-xl p-4 text-center hover:border-purple-500 transition-colors cursor-pointer">
                     <input
                       type="file"
                       accept="image/*"
@@ -185,8 +185,8 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                       ) : (
                         <>
                           <div className="text-4xl mb-2">🖼️</div>
-                          <p className="text-sm text-gray-600">Clic para seleccionar</p>
-                          <p className="text-xs text-gray-400 mt-1">Imagen equirectangular (2:1)</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Clic para seleccionar</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Imagen equirectangular (2:1)</p>
                         </>
                       )}
                     </label>
@@ -196,7 +196,7 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                 {/* Campos */}
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Título
                     </label>
                     <input
@@ -204,12 +204,12 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                       value={newImage.titulo}
                       onChange={(e) => setNewImage({ ...newImage, titulo: e.target.value })}
                       placeholder="Ej: Vista principal, Baño"
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Descripción
                     </label>
                     <textarea
@@ -217,7 +217,7 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                       onChange={(e) => setNewImage({ ...newImage, descripcion: e.target.value })}
                       placeholder="Descripción del punto de vista..."
                       rows={2}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                      className="w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
                     />
                   </div>
                 </div>
@@ -226,7 +226,7 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
               <button
                 type="submit"
                 disabled={!newImage.file || uploading}
-                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 dark:disabled:bg-purple-800 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {uploading ? (
                   <>
@@ -245,30 +245,30 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
 
           {/* Lista de imágenes */}
           <div>
-            <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
               🖼️ Imágenes 360° ({imagenes.length})
             </h3>
 
             {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin h-10 w-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
-                <p className="text-gray-500 mt-3">Cargando imágenes...</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-3">Cargando imágenes...</p>
               </div>
             ) : imagenes.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                 <div className="text-5xl mb-3">🔄</div>
-                <p className="text-gray-600 font-medium">No hay imágenes 360° aún</p>
-                <p className="text-gray-400 text-sm mt-1">Sube la primera imagen para el tour virtual</p>
+                <p className="text-gray-600 dark:text-gray-300 font-medium">No hay imágenes 360° aún</p>
+                <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Sube la primera imagen para el tour virtual</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {imagenes.map((img, index) => (
                   <div
                     key={img.id_imagen}
-                    className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow"
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm hover:shadow-md dark:hover:border-gray-600 transition-shadow"
                   >
                     {/* Imagen */}
-                    <div className="relative h-40 bg-gray-100">
+                    <div className="relative h-40 bg-gray-100 dark:bg-gray-700">
                       <img
                         src={img.url}
                         alt={img.titulo || `Escena ${index + 1}`}
@@ -291,22 +291,22 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                             value={editForm.titulo}
                             onChange={(e) => setEditForm({ ...editForm, titulo: e.target.value })}
                             placeholder="Título"
-                            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+                            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
                           />
                           <textarea
                             value={editForm.descripcion}
                             onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
                             placeholder="Descripción"
                             rows={2}
-                            className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-purple-500"
+                            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-purple-500"
                           />
                           <div className="flex items-center gap-2">
-                            <label className="text-sm text-gray-600">Orden:</label>
+                            <label className="text-sm text-gray-600 dark:text-gray-400">Orden:</label>
                             <input
                               type="number"
                               value={editForm.orden}
                               onChange={(e) => setEditForm({ ...editForm, orden: parseInt(e.target.value) || 0 })}
-                              className="w-20 border rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-purple-500"
+                              className="w-20 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-purple-500"
                               min="0"
                             />
                           </div>
@@ -319,7 +319,7 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                             </button>
                             <button
                               onClick={() => setEditando(null)}
-                              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium transition-colors"
+                              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm font-medium transition-colors"
                             >
                               Cancelar
                             </button>
@@ -327,24 +327,24 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
                         </div>
                       ) : (
                         <>
-                          <h4 className="font-semibold text-gray-800">
+                          <h4 className="font-semibold text-gray-800 dark:text-gray-100">
                             {img.titulo || `Escena ${index + 1}`}
                           </h4>
                           {img.descripcion && (
-                            <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                               {img.descripcion}
                             </p>
                           )}
                           <div className="flex gap-2 mt-3">
                             <button
                               onClick={() => startEdit(img)}
-                              className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 rounded-lg text-sm font-medium transition-colors"
+                              className="flex-1 bg-brand-orange/10 hover:bg-brand-orange/20 text-brand-orange py-2 rounded-lg text-sm font-medium transition-colors"
                             >
                               ✏️ Editar
                             </button>
                             <button
                               onClick={() => handleDelete(img.id_imagen)}
-                              className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg text-sm font-medium transition-colors"
+                              className="px-4 py-2 bg-red-100 dark:bg-red-500/15 hover:bg-red-200 dark:hover:bg-red-500/25 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium transition-colors"
                             >
                               🗑️
                             </button>
@@ -360,13 +360,13 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
 
           {/* Info */}
           {imagenes.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="bg-brand-orange/5 dark:bg-brand-orange/10 border border-brand-orange/20 dark:border-brand-orange/30 rounded-xl p-4">
               <div className="flex gap-3">
                 <span className="text-xl">💡</span>
                 <div className="text-sm">
-                  <p className="font-medium text-blue-800">Consejo</p>
-                  <p className="text-blue-600">
-                    El orden determina la secuencia del tour. Usa imágenes equirectangulares 
+                  <p className="font-medium text-brand-charcoal dark:text-gray-200">Consejo</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    El orden determina la secuencia del tour. Usa imágenes equirectangulares
                     (proporción 2:1) para mejor visualización 360°.
                   </p>
                 </div>
@@ -376,10 +376,10 @@ const Imagenes360Manager = ({ habitacion, onClose, onUpdate }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4 bg-gray-50 shrink-0">
+        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4 bg-gray-50 dark:bg-gray-800/50 shrink-0">
           <button
             onClick={onClose}
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white py-3 rounded-lg font-medium transition-colors"
+            className="w-full bg-gray-600 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white py-3 rounded-lg font-medium transition-colors"
           >
             Cerrar
           </button>

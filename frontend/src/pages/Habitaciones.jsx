@@ -45,65 +45,73 @@ const Habitaciones = () => {
     setReload(!reload);
   };
 
-  return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">🏨 Gestión de Habitaciones</h2>
+  const tabs = [
+    { id: "habitaciones", label: "Habitaciones", icon: "🛏️", visible: true },
+    {
+      id: "formulario",
+      label: "Registrar/Editar",
+      icon: "📝",
+      visible: tienePermiso("habitacion.crear") || tienePermiso("habitacion.editar"),
+    },
+  ].filter((tab) => tab.visible);
 
-      {/* Tabs */}
-      <div className="flex flex-wrap border-b mb-4">
-        {[
-          { id: "habitaciones", label: "🛏️ Habitaciones", visible: true },
-          {
-            id: "formulario",
-            label: "📝 Registrar/Editar",
-            visible: tienePermiso("habitacion.crear") || tienePermiso("habitacion.editar"),
-          },
-        ]
-          .filter((tab) => tab.visible)
-          .map((tab) => (
+  return (
+    <div className="p-4 sm:p-6 min-h-screen bg-slate-50 dark:bg-gray-950 transition-colors duration-300">
+      <div className="mx-auto max-w-7xl">
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-gray-100 mb-1">
+          🏨 Gestión de Habitaciones
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-gray-400 mb-6">
+          Administra las habitaciones, sus imágenes y el tour virtual 360°
+        </p>
+
+        {/* Tabs */}
+        <div className="flex flex-wrap gap-1.5 rounded-xl bg-slate-100 dark:bg-gray-800 p-1 mb-6 self-start w-fit">
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => {
                 setActiveTab(tab.id);
                 if (tab.id === "formulario") setEditando(null);
               }}
-              className={`px-4 py-2 border-b-2 font-medium transition-colors ${
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
                 activeTab === tab.id
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  ? "bg-white dark:bg-gray-700 text-brand-orange shadow-sm"
+                  : "text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200"
               }`}
             >
+              <span>{tab.icon}</span>
               {tab.label}
             </button>
           ))}
+        </div>
+
+        {/* Contenido según la pestaña activa */}
+        {activeTab === "habitaciones" && (
+          <HabitacionesLista
+            onEdit={handleEditHabitacion}
+            onTour360={handleTour360}
+            reload={reload}
+          />
+        )}
+
+        {activeTab === "formulario" && (tienePermiso("habitacion.crear") || tienePermiso("habitacion.editar")) && (
+          <HabitacionForm
+            id={editando?.id_habitacion}
+            onSuccess={handleHabitacionSaved}
+            onCancel={() => setActiveTab("habitaciones")}
+          />
+        )}
+
+        {/* Modal de Imágenes 360° */}
+        {show360Modal && habitacion360 && (
+          <Imagenes360Manager
+            habitacion={habitacion360}
+            onClose={handleClose360}
+            onUpdate={handleUpdate360}
+          />
+        )}
       </div>
-
-      {/* Contenido según la pestaña activa */}
-      {activeTab === "habitaciones" && (
-        <HabitacionesLista 
-          onEdit={handleEditHabitacion} 
-          onTour360={handleTour360}  // 👈 Pasamos la función para abrir el modal
-          reload={reload} 
-        />
-      )}
-
-      {activeTab === "formulario" && (tienePermiso("habitacion.crear") || tienePermiso("habitacion.editar")) && (
-        <HabitacionForm
-          id={editando?.id_habitacion}
-          onSuccess={handleHabitacionSaved}
-          onCancel={() => setActiveTab("habitaciones")}
-        />
-      )}
-
-
-      {/* Modal de Imágenes 360° */}
-      {show360Modal && habitacion360 && (
-        <Imagenes360Manager
-          habitacion={habitacion360}
-          onClose={handleClose360}
-          onUpdate={handleUpdate360}
-        />
-      )}
     </div>
   );
 };

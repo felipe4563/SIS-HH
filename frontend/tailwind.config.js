@@ -15,6 +15,9 @@ export default {
         'brand-charcoal':    '#2D3436',
         'brand-green':       '#2E7D32',
         'brand-mist':        '#B0BEC5',
+        'brand-gold':        '#D4A017',
+        'brand-dark':        '#0D1117',
+        'brand-dark-card':   '#161B22',
       },
       animation: {
         'fade-in':            'fadeIn 0.3s ease-out',
@@ -28,6 +31,9 @@ export default {
         'pulse-orange':       'pulseOrange 2s ease-in-out infinite',
         'slide-in-left':      'slideInLeft 0.5s ease-out both',
         'slide-in-right':     'slideInRight 0.5s ease-out both',
+        'bounce-soft':        'bounceSoft 0.5s ease-out',
+        'whatsapp-pulse':     'whatsappPulse 2s ease-in-out infinite',
+        'scale-in':           'scaleIn 0.4s ease-out both',
       },
       keyframes: {
         fadeIn: {
@@ -57,6 +63,19 @@ export default {
         slideInRight: {
           from: { opacity: '0', transform: 'translateX(24px)' },
           to:   { opacity: '1', transform: 'translateX(0)' },
+        },
+        bounceSoft: {
+          '0%':   { transform: 'scale(0.95)', opacity: '0' },
+          '60%':  { transform: 'scale(1.02)' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        whatsappPulse: {
+          '0%, 100%': { transform: 'scale(1)', boxShadow: '0 0 0 0 rgba(37,211,102,0.5)' },
+          '50%':      { transform: 'scale(1.05)', boxShadow: '0 0 0 12px rgba(37,211,102,0)' },
+        },
+        scaleIn: {
+          from: { opacity: '0', transform: 'scale(0.9)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
         },
       },
     },

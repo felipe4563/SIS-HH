@@ -117,7 +117,7 @@ const ModalCarrito = ({ onClose }) => {
   const hayNoDisponible = Object.values(disponibilidad).some((d) => d === false);
   const todasDisponibles = todasVerificadas && !hayNoDisponible;
 
-  const getAjusteColor = (v) => (v > 0 ? 'text-red-600' : v < 0 ? 'text-green-600' : 'text-gray-600');
+  const getAjusteColor = (v) => (v > 0 ? 'text-red-600 dark:text-red-400' : v < 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -196,7 +196,7 @@ const ModalCarrito = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
-      <div className="bg-white rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[95vh] overflow-hidden transform animate-slideUp">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full sm:max-w-4xl max-h-[95vh] overflow-hidden transform animate-slideUp">
 
         {/* Header */}
         <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white p-5 sm:p-8 overflow-hidden">
@@ -241,13 +241,13 @@ const ModalCarrito = ({ onClose }) => {
 
           {/* Info del usuario */}
           {usuario && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-4">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-900 rounded-2xl p-4 flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                 {usuario.nombre.charAt(0)}{usuario.apellido.charAt(0)}
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-gray-900 truncate">{usuario.nombre} {usuario.apellido}</p>
-                <p className="text-sm text-gray-500 truncate">{usuario.correo}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{usuario.nombre} {usuario.apellido}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{usuario.correo}</p>
               </div>
             </div>
           )}
@@ -257,7 +257,7 @@ const ModalCarrito = ({ onClose }) => {
 
             {/* Calendario con fechas ocupadas unificadas de todas las habitaciones */}
             <div className="min-w-0">
-              <div className="rounded-2xl border border-gray-200 p-3 sm:p-4 bg-white overflow-hidden">
+              <div className="rounded-2xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4 bg-white dark:bg-gray-800 overflow-hidden">
                 <CalendarioReserva
                   idHabitaciones={idsEnCarrito}
                   fechaEntrada={fechaEntrada}
@@ -269,21 +269,21 @@ const ModalCarrito = ({ onClose }) => {
 
             {/* Huéspedes + hora de llegada */}
             <div className="min-w-0 space-y-4">
-              <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 space-y-4">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 space-y-4">
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                   Cantidad de huéspedes
                 </h3>
 
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-lg px-3 py-2">
                   Capacidad total entre todas las habitaciones: <strong>{capacidadTotal} {capacidadTotal === 1 ? 'persona' : 'personas'}</strong> (adultos + niños)
                 </p>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Adultos</label>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Adultos</label>
                     <div className="relative">
                       <select
                         value={cantidadAdultos}
@@ -294,7 +294,7 @@ const ModalCarrito = ({ onClose }) => {
                           if (cantidadNinos > nuevosMaxNinos) setCantidadNinos(nuevosMaxNinos);
                         }}
                         required
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none font-semibold bg-white cursor-pointer"
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 transition-all appearance-none font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 cursor-pointer"
                       >
                         {Array.from({ length: maxAdultos }, (_, i) => i + 1).map((n) => (
                           <option key={n} value={n}>{n} {n === 1 ? 'adulto' : 'adultos'}</option>
@@ -306,12 +306,12 @@ const ModalCarrito = ({ onClose }) => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Niños</label>
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Niños</label>
                     <div className="relative">
                       <select
                         value={cantidadNinos}
                         onChange={(e) => setCantidadNinos(Number(e.target.value))}
-                        className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none font-semibold bg-white cursor-pointer"
+                        className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 transition-all appearance-none font-semibold bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 cursor-pointer"
                       >
                         {Array.from({ length: maxNinos + 1 }, (_, i) => i).map((n) => (
                           <option key={n} value={n}>{n} {n === 1 ? 'niño' : 'niños'}</option>
@@ -325,21 +325,21 @@ const ModalCarrito = ({ onClose }) => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-5 border border-gray-200">
-                <label className="font-bold text-gray-900 flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700">
+                <label className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Hora estimada de llegada
-                  <span className="text-xs font-normal text-gray-500">(opcional)</span>
+                  <span className="text-xs font-normal text-gray-500 dark:text-gray-500">(opcional)</span>
                 </label>
                 <input
                   type="time"
                   value={horaLlegada}
                   onChange={(e) => setHoraLlegada(e.target.value)}
-                  className="w-full px-4 py-3.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                  className="w-full px-4 py-3.5 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 transition-all font-medium bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                 />
-                <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 flex items-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -351,11 +351,11 @@ const ModalCarrito = ({ onClose }) => {
 
           {/* ── SPINNER de verificación / cálculo ── */}
           {cargando && (
-            <div className="bg-blue-50 rounded-2xl p-6 text-center border border-blue-200">
+            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-2xl p-6 text-center border border-blue-200 dark:border-blue-900">
               <div className="relative inline-flex items-center justify-center w-12 h-12 mb-3">
-                <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-blue-200 border-t-blue-600" />
+                <div className="h-12 w-12 animate-spin rounded-full border-[3px] border-blue-200 dark:border-blue-800 border-t-blue-600" />
               </div>
-              <p className="text-blue-900 font-semibold">
+              <p className="text-blue-900 dark:text-blue-300 font-semibold">
                 {verificando ? 'Verificando disponibilidad de habitaciones…' : 'Calculando precios dinámicos…'}
               </p>
             </div>
@@ -365,8 +365,8 @@ const ModalCarrito = ({ onClose }) => {
           {!cargando && fechaEntrada && fechaSalida && habitaciones.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
                       d="M3 20v-5m0 0h18m-18 0v-3a3 3 0 013-3h12a3 3 0 013 3v3M7 12V9a2 2 0 012-2h2a2 2 0 012 2v3M3 20h18" />
                   </svg>
@@ -376,7 +376,7 @@ const ModalCarrito = ({ onClose }) => {
                   <button
                     type="button"
                     onClick={() => setMostrarDetalles(!mostrarDetalles)}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 transition-colors"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold flex items-center gap-1 transition-colors"
                   >
                     {mostrarDetalles ? 'Ocultar' : 'Ver'} ajustes
                     <svg className={`w-4 h-4 transition-transform ${mostrarDetalles ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,10 +397,10 @@ const ModalCarrito = ({ onClose }) => {
                     key={hab.id_habitacion}
                     className={`rounded-2xl border-2 p-4 transition-all duration-300 ${
                       !verificado
-                        ? 'border-gray-200 bg-white'
+                        ? 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'
                         : disp
-                        ? 'border-green-200 bg-gradient-to-r from-green-50 to-emerald-50'
-                        : 'border-red-200 bg-gradient-to-r from-red-50 to-rose-50'
+                        ? 'border-green-200 dark:border-green-800 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30'
+                        : 'border-red-200 dark:border-red-800 bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30'
                     }`}
                   >
                     <div className="flex items-center gap-4">
@@ -412,12 +412,12 @@ const ModalCarrito = ({ onClose }) => {
                       />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <h4 className="font-bold text-gray-900">Habitación {hab.numero}</h4>
+                          <h4 className="font-bold text-gray-900 dark:text-gray-100">Habitación {hab.numero}</h4>
                           {verificado && (
                             <span className={`inline-flex items-center gap-1 text-xs px-2.5 py-0.5 rounded-full font-semibold ${
                               disp
-                                ? 'bg-green-100 text-green-700 border border-green-200'
-                                : 'bg-red-100 text-red-700 border border-red-200'
+                                ? 'bg-green-100 dark:bg-green-950/50 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+                                : 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
                             }`}>
                               {disp ? (
                                 <>
@@ -437,25 +437,25 @@ const ModalCarrito = ({ onClose }) => {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">{hab.tipo.nombre}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{hab.tipo.nombre}</p>
                         {precio && (
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-xs text-gray-400 line-through">Bs. {precio.precio_base}/noche</span>
-                            <span className="text-sm font-bold text-blue-600">Bs. {precio.precio_por_noche}/noche</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 line-through">Bs. {precio.precio_base}/noche</span>
+                            <span className="text-sm font-bold text-blue-600 dark:text-blue-400">Bs. {precio.precio_por_noche}/noche</span>
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
                         {precio && (
                           <div className="text-right">
-                            <p className="text-xl font-bold text-blue-700">Bs. {precio.precio_total.toFixed(2)}</p>
-                            <p className="text-xs text-gray-400">{precio.noches} {precio.noches === 1 ? 'noche' : 'noches'}</p>
+                            <p className="text-xl font-bold text-blue-700 dark:text-blue-400">Bs. {precio.precio_total.toFixed(2)}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500">{precio.noches} {precio.noches === 1 ? 'noche' : 'noches'}</p>
                           </div>
                         )}
                         <button
                           type="button"
                           onClick={() => eliminarHabitacion(hab.id_habitacion)}
-                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          className="p-2 text-red-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition-all"
                           title="Eliminar del carrito"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -467,10 +467,10 @@ const ModalCarrito = ({ onClose }) => {
 
                     {/* Detalle de ajuste de temporada */}
                     {mostrarDetalles && precio && (
-                      <div className="mt-3 pt-3 border-t border-gray-200 bg-white/60 rounded-xl p-3 space-y-1.5">
-                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Ajuste aplicado</p>
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-900/40 rounded-xl p-3 space-y-1.5">
+                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Ajuste aplicado</p>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">
+                          <span className="text-gray-600 dark:text-gray-400">
                             • {precio.ajustes.temporada > 0 ? 'Temporada alta' : 'Temporada normal'}
                           </span>
                           <span className={`font-semibold ${getAjusteColor(precio.ajustes.temporada)}`}>
@@ -487,15 +487,15 @@ const ModalCarrito = ({ onClose }) => {
 
           {/* ── Alerta habitaciones no disponibles ── */}
           {hayNoDisponible && !cargando && (
-            <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-200 rounded-2xl p-5 flex items-start gap-3 shadow-sm">
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-2 border-red-200 dark:border-red-800 rounded-2xl p-5 flex items-start gap-3 shadow-sm">
               <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
               <div>
-                <p className="font-bold text-red-900">Habitaciones no disponibles</p>
-                <p className="text-sm text-red-700 mt-0.5">
+                <p className="font-bold text-red-900 dark:text-red-300">Habitaciones no disponibles</p>
+                <p className="text-sm text-red-700 dark:text-red-400 mt-0.5">
                   Algunas habitaciones no están disponibles para las fechas seleccionadas. Elimínalas del carrito o elige otras fechas.
                 </p>
               </div>
@@ -504,34 +504,34 @@ const ModalCarrito = ({ onClose }) => {
 
           {/* ── Resumen total ── */}
           {preciosDinamicos.length > 0 && !cargando && todasDisponibles && (
-            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-blue-100 shadow-lg">
-              <h3 className="font-bold text-gray-900 text-lg mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/30 dark:via-indigo-950/30 dark:to-purple-950/30 rounded-2xl p-6 border-2 border-blue-100 dark:border-blue-900 shadow-lg">
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg mb-4 flex items-center gap-2">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
                 Resumen con Precio Inteligente
               </h3>
               <div className="space-y-2.5">
-                <div className="flex justify-between text-gray-700">
+                <div className="flex justify-between text-gray-700 dark:text-gray-300">
                   <span>Noches de estancia</span>
-                  <span className="font-bold text-gray-900">{noches}</span>
+                  <span className="font-bold text-gray-900 dark:text-gray-100">{noches}</span>
                 </div>
-                <div className="flex justify-between text-gray-700">
+                <div className="flex justify-between text-gray-700 dark:text-gray-300">
                   <span>Habitaciones</span>
-                  <span className="font-bold text-gray-900">{habitaciones.length}</span>
+                  <span className="font-bold text-gray-900 dark:text-gray-100">{habitaciones.length}</span>
                 </div>
-                <div className="flex justify-between text-gray-700">
+                <div className="flex justify-between text-gray-700 dark:text-gray-300">
                   <span>Huéspedes</span>
-                  <span className="font-bold text-gray-900">{cantidadAdultos + cantidadNinos}</span>
+                  <span className="font-bold text-gray-900 dark:text-gray-100">{cantidadAdultos + cantidadNinos}</span>
                 </div>
-                <div className="border-t-2 border-blue-200 pt-3 mt-3">
+                <div className="border-t-2 border-blue-200 dark:border-blue-900 pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-gray-900 text-lg">Total a pagar</span>
+                    <span className="font-bold text-gray-900 dark:text-gray-100 text-lg">Total a pagar</span>
                     <div className="text-right">
                       <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                         Bs. {totalGeneral.toFixed(2)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {noches} noches × {habitaciones.length} habitaciones
                       </div>
                     </div>
@@ -543,13 +543,13 @@ const ModalCarrito = ({ onClose }) => {
 
           {/* ── Error ── */}
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-              <svg className="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-red-50 dark:bg-red-950/40 border-2 border-red-200 dark:border-red-900 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+              <svg className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <div>
-                <p className="font-semibold text-red-900">Error</p>
-                <p className="text-sm text-red-700 mt-0.5">{error}</p>
+                <p className="font-semibold text-red-900 dark:text-red-300">Error</p>
+                <p className="text-sm text-red-700 dark:text-red-400 mt-0.5">{error}</p>
               </div>
             </div>
           )}
@@ -559,7 +559,7 @@ const ModalCarrito = ({ onClose }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+              className="flex-1 px-6 py-4 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-200"
             >
               Cancelar
             </button>
@@ -569,7 +569,7 @@ const ModalCarrito = ({ onClose }) => {
               className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all duration-200 transform ${
                 canSubmit
                   ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 hover:from-blue-700 hover:via-blue-800 hover:to-purple-800 text-white shadow-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98]'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
               }`}
             >
               {loading ? (
@@ -601,7 +601,7 @@ const ModalCarrito = ({ onClose }) => {
 
           {/* Info pago único */}
           {habitaciones.length > 1 && usuario && (
-            <p className="text-xs text-gray-400 text-center flex items-center justify-center gap-1.5">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center flex items-center justify-center gap-1.5">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

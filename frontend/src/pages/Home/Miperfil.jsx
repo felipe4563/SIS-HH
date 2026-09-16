@@ -81,9 +81,9 @@ const MiPerfil = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-colors">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white dark:from-gray-900 dark:to-gray-950">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Link 
             to="/" 
@@ -108,17 +108,17 @@ const MiPerfil = () => {
 
       {/* Contenido */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
           {/* Información de cuenta */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-200">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-800 p-6 border-b border-blue-200 dark:border-gray-700">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
                 <span className="text-3xl">👤</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Cuenta de Google</h2>
-                <p className="text-gray-600">{usuario.correo}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Cuenta de Google</h2>
+                <p className="text-gray-600 dark:text-gray-400">{usuario.correo}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   Registrado desde {new Date(usuario.fecha_registro || Date.now()).toLocaleDateString('es-ES')}
                 </p>
               </div>
@@ -129,23 +129,23 @@ const MiPerfil = () => {
           <form onSubmit={handleSubmit} className="p-6 sm:p-8">
             {/* Mensajes */}
             {success && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center">
+              <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-xl flex items-center">
                 <span className="text-2xl mr-3">✅</span>
-                <p className="text-green-700 font-medium">{success}</p>
+                <p className="text-green-700 dark:text-green-400 font-medium">{success}</p>
               </div>
             )}
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center">
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl flex items-center">
                 <span className="text-2xl mr-3">⚠️</span>
-                <p className="text-red-700 font-medium">{error}</p>
+                <p className="text-red-700 dark:text-red-400 font-medium">{error}</p>
               </div>
             )}
 
             {requierePerfilCompletado && !success && (
-              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center">
+              <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl flex items-center">
                 <span className="text-2xl mr-3">❗</span>
-                <p className="text-amber-800 font-medium">Por favor, completa tus datos personales para poder continuar con la reserva.</p>
+                <p className="text-amber-800 dark:text-amber-400 font-medium">Por favor, completa tus datos personales para poder continuar con la reserva.</p>
               </div>
             )}
 
@@ -153,7 +153,7 @@ const MiPerfil = () => {
               {/* Nombre y Apellido */}
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Nombre *
                   </label>
                   <input
@@ -162,13 +162,13 @@ const MiPerfil = () => {
                     value={formData.nombre}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Tu nombre"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Apellido *
                   </label>
                   <input
@@ -177,7 +177,7 @@ const MiPerfil = () => {
                     value={formData.apellido}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     placeholder="Tu apellido"
                   />
                 </div>
@@ -185,7 +185,7 @@ const MiPerfil = () => {
 
               {/* CI */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Cédula de Identidad *
                 </label>
                 <input
@@ -194,17 +194,17 @@ const MiPerfil = () => {
                   value={formData.ci}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Ej: 12345678"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   Requerido para el check-in en el hostal
                 </p>
               </div>
 
               {/* Celular */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Celular *
                 </label>
                 <input
@@ -213,14 +213,14 @@ const MiPerfil = () => {
                   value={formData.celular}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Ej: +591 70123456"
                 />
               </div>
 
               {/* Dirección */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Dirección *
                 </label>
                 <textarea
@@ -229,23 +229,23 @@ const MiPerfil = () => {
                   onChange={handleChange}
                   required
                   rows="3"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="Ej: Av. Heroínas #123, Cochabamba"
                 />
               </div>
 
               {/* Correo (solo lectura) */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Correo Electrónico
                 </label>
                 <input
                   type="email"
                   value={usuario.correo}
                   disabled
-                  className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 cursor-not-allowed"
+                  className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                   El correo no se puede modificar (vinculado a Google)
                 </p>
               </div>
@@ -255,7 +255,7 @@ const MiPerfil = () => {
             <div className="flex flex-col sm:flex-row gap-3 mt-8">
               <Link
                 to="/"
-                className="flex-1 text-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                className="flex-1 text-center px-6 py-3 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
               >
                 Cancelar
               </Link>
@@ -264,7 +264,7 @@ const MiPerfil = () => {
                 disabled={loading}
                 className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg ${
                   loading
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white'
                 }`}
               >
@@ -283,17 +283,17 @@ const MiPerfil = () => {
 
         {/* Tarjetas de información */}
         <div className="grid md:grid-cols-2 gap-6 mt-8">
-          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6">
             <div className="flex items-center mb-4">
               <span className="text-3xl mr-3">📋</span>
-              <h3 className="text-lg font-bold text-gray-900">Mis Reservas</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Mis Reservas</h3>
             </div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Consulta y gestiona todas tus reservas
             </p>
             <Link
               to="/mis-reservas"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold"
+              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
             >
               Ver reservas
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,17 +302,17 @@ const MiPerfil = () => {
             </Link>
           </div>
 
-          <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-100 dark:border-gray-800 p-6">
             <div className="flex items-center mb-4">
               <span className="text-3xl mr-3">🏨</span>
-              <h3 className="text-lg font-bold text-gray-900">Explorar Habitaciones</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Explorar Habitaciones</h3>
             </div>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Descubre todas nuestras opciones de alojamiento
             </p>
             <Link
               to="/"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-semibold"
+              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
             >
               Ver habitaciones
               <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,6 +1,7 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { ThemeContext } from '../context/ThemeContext';
 import { getHabitaciones } from '../services/habitacion';
 import HabitacionCard from '../pages/Home/HabitacionCard';
 import FiltrosHabitaciones from '../pages/Home/FiltrosHabitaciones';
@@ -23,6 +24,11 @@ const ICON_DEFS = {
   creditCard:    ['M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 21Z'],
   exclamation:   ['M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z'],
   search:        ['m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z'],
+  shield:        ['M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z'],
+  star:          ['M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z'],
+  phone:         ['M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z'],
+  arrowDown:     ['M19.5 13.5 12 21m0 0-7.5-7.5M12 21V3'],
+  home:          ['m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25'],
 };
 
 const SvgIcon = ({ name, className = 'h-5 w-5' }) => (
@@ -32,14 +38,80 @@ const SvgIcon = ({ name, className = 'h-5 w-5' }) => (
     ))}
   </svg>
 );
+
+/* ── Hook: Contador animado ─────────────────────────────────────────────── */
+function useAnimatedCounter(end, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const prevEnd = useRef(0);
+
+  useEffect(() => {
+    if (end === prevEnd.current) return;
+    prevEnd.current = end;
+    if (end === 0) { setCount(0); return; }
+
+    let start = 0;
+    const startTime = performance.now();
+    const step = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setCount(Math.round(eased * end));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [end, duration]);
+
+  return count;
+}
+
+/* ── Skeleton Card ──────────────────────────────────────────────────────── */
+function SkeletonCard() {
+  return (
+    <div className="rounded-3xl border border-brand-mist/40 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden shadow-md">
+      <div className="h-56 sm:h-64 bg-slate-200 dark:bg-gray-800 animate-shimmer" />
+      <div className="p-4 sm:p-5 space-y-3">
+        <div className="flex justify-between">
+          <div className="space-y-2 flex-1">
+            <div className="h-5 w-32 rounded-lg bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+            <div className="h-4 w-24 rounded-lg bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+          </div>
+          <div className="space-y-2 text-right">
+            <div className="h-6 w-20 rounded-lg bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+            <div className="h-3 w-14 rounded-lg bg-slate-200 dark:bg-gray-700 animate-shimmer ml-auto" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="h-7 w-28 rounded-full bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+          <div className="h-7 w-20 rounded-full bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+        </div>
+        <div className="h-4 w-full rounded-lg bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+        <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-gray-700 animate-shimmer" />
+      </div>
+    </div>
+  );
+}
+
+/* ── WhatsApp Icon (SVG) ────────────────────────────────────────────────── */
+const WhatsAppIcon = ({ className = 'h-6 w-6' }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+  </svg>
+);
+
 /* ────────────────────────────────────────────────────────────────────────── */
+
+// Número de WhatsApp — CAMBIA ESTE NÚMERO POR EL REAL
+const WHATSAPP_NUMERO = '59177123456';
+const WHATSAPP_MENSAJE = '¡Hola! Me interesa información sobre las habitaciones de H&H Residencial.';
 
 function Home() {
   const { usuario, logout } = useContext(AuthContext);
+  const { isDark, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const mapRef = useRef(null);
+  const habitacionesRef = useRef(null);
 
   const scrollAlMapa = () => mapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollAHabitaciones = () => habitacionesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const [habitaciones, setHabitaciones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,16 +121,11 @@ function Home() {
   const [mostrarModalReserva, setMostrarModalReserva] = useState(false);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [menuUsuarioAbierto, setMenuUsuarioAbierto] = useState(false);
-  const [isDark, setIsDark] = useState(() => localStorage.getItem('hh-theme') === 'dark');
 
   const esCliente = usuario?.tipo === 'cliente';
   const esUsuarioSistema = usuario && !esCliente;
 
   useEffect(() => { cargarHabitaciones(); }, []);
-
-  useEffect(() => {
-    localStorage.setItem('hh-theme', isDark ? 'dark' : 'light');
-  }, [isDark]);
 
   const cargarHabitaciones = async (filtrosAplicados = {}) => {
     setLoading(true);
@@ -101,15 +168,23 @@ function Home() {
   const habitacionesDisponibles = habitaciones.filter(h => h.estado === 'disponible').length;
   const habitacionesConTour360  = habitaciones.filter(h => h.imagenes?.some(i => i.tipo_imagen === '360')).length;
 
+  /* Contadores animados */
+  const animTotal       = useAnimatedCounter(totalHabitaciones);
+  const animDisponibles = useAnimatedCounter(habitacionesDisponibles);
+  const animTour360     = useAnimatedCounter(habitacionesConTour360);
+
+  const logoSrc = isDark ? '/modooscuro.png' : '/modoclaro.png';
+
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(WHATSAPP_MENSAJE)}`;
+
   return (
-    <div className={isDark ? 'dark' : ''}>
     <div className="min-h-screen bg-brand-sand dark:bg-gray-950 animate-fade-in-soft transition-colors duration-300">
 
       {/* ── NAV ── */}
       <nav className="sticky top-0 z-50 border-b border-brand-mist dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md animate-fade-up">
-        <div className="mx-auto flex h-16 sm:h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 sm:h-18 items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex min-w-0 items-center gap-3 transition-transform duration-200 hover:scale-105">
-            <img src="/logo.png" alt="H&H Logo" className="h-10 w-10 object-contain sm:h-11 sm:w-11" />
+            <img src={logoSrc} alt="H&H Logo" className="h-10 w-10 object-contain sm:h-11 sm:w-11" />
             <div className="min-w-0">
               <p className="truncate text-sm font-black tracking-wide text-brand-charcoal dark:text-gray-100 sm:text-base">
                 <span className="text-brand-orange">Residencial</span>
@@ -122,7 +197,7 @@ function Home() {
           <div className="hidden items-center gap-4 md:flex">
             {/* Toggle dark mode */}
             <button
-              onClick={() => setIsDark(prev => !prev)}
+              onClick={() => toggleTheme()}
               aria-label={isDark ? 'Activar modo claro' : 'Activar modo oscuro'}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-mist/40 bg-brand-orange/10 text-brand-charcoal transition-all duration-200 hover:bg-brand-orange/20 dark:border-gray-600 dark:bg-brand-orange/20 dark:text-gray-300"
             >
@@ -169,7 +244,7 @@ function Home() {
                       <SvgIcon name="identification" className="h-4 w-4 flex-shrink-0 text-brand-mist" />
                       Mi Perfil
                     </Link>
-                    <button onClick={handleCerrarSesion} className="flex w-full items-center gap-2.5 border-t border-brand-mist/30 px-4 py-3 text-left text-sm font-medium text-red-500 hover:bg-red-50">
+                    <button onClick={handleCerrarSesion} className="flex w-full items-center gap-2.5 border-t border-brand-mist/30 dark:border-gray-700 px-4 py-3 text-left text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30">
                       <SvgIcon name="logout" className="h-4 w-4 flex-shrink-0" />
                       Cerrar Sesión
                     </button>
@@ -197,11 +272,11 @@ function Home() {
 
         {menuMovilAbierto && (
           <div className="border-t border-brand-mist/40 dark:border-gray-700 px-4 py-4 md:hidden">
-            <div className="mx-auto flex max-w-7xl flex-col gap-2">
+            <div className="flex flex-col gap-2">
               {/* Toggle dark mode - móvil */}
               <button
-                onClick={() => setIsDark(prev => !prev)}
-                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-charcoal dark:text-gray-300 hover:bg-brand-orange/5"
+                onClick={() => toggleTheme()}
+                className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-charcoal dark:text-gray-300 hover:bg-brand-orange/5 dark:hover:bg-gray-800"
               >
                 {isDark ? (
                   <>
@@ -212,7 +287,7 @@ function Home() {
                   </>
                 ) : (
                   <>
-                    <svg className="h-4 w-4 flex-shrink-0 text-brand-mist" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+                    <svg className="h-4 w-4 flex-shrink-0 text-brand-mist dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
                     </svg>
                     Modo oscuro
@@ -233,7 +308,7 @@ function Home() {
                     <SvgIcon name="identification" className="h-4 w-4 flex-shrink-0 text-brand-mist" />
                     Mi Perfil
                   </Link>
-                  <button onClick={handleCerrarSesion} className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 hover:bg-red-50">
+                  <button onClick={handleCerrarSesion} className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30">
                     <SvgIcon name="logout" className="h-4 w-4 flex-shrink-0" />
                     Cerrar Sesión
                   </button>
@@ -259,11 +334,12 @@ function Home() {
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute -left-16 -top-20 h-72 w-72 rounded-full bg-brand-orange blur-3xl animate-soft-float" />
           <div className="absolute -bottom-20 -right-10 h-80 w-80 rounded-full bg-brand-orange-deep blur-3xl animate-soft-float" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-60 w-60 rounded-full bg-brand-orange/30 blur-3xl animate-soft-float" style={{ animationDelay: '4s' }} />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+        <div className="relative px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-10">
-            <div className="lg:col-span-3">
+            <div className="min-w-0 lg:col-span-3">
               <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-orange/30 bg-brand-orange/10 px-3 py-1 text-xs font-medium text-brand-orange sm:text-sm animate-fade-up-delay-1">
                 <SvgIcon name="sparkles" className="h-3.5 w-3.5 flex-shrink-0" />
                 H&H Residencial — Cochabamba, Bolivia
@@ -274,6 +350,27 @@ function Home() {
               <p className="mt-4 max-w-2xl text-sm text-brand-mist sm:text-lg animate-fade-up-delay-3">
                 Habitaciones modernas, atención cálida y reservas rápidas. Disfruta del tour virtual 360° y elige la habitación perfecta para tu estadía.
               </p>
+
+              {/* ── CTAs del Hero ── */}
+              <div className="mt-6 flex flex-wrap gap-3 animate-fade-up-delay-3">
+                <button
+                  onClick={scrollAHabitaciones}
+                  className="group inline-flex items-center gap-2.5 rounded-2xl bg-gradient-to-r from-brand-orange-deep to-brand-orange px-6 py-3.5 text-sm font-bold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5 hover:brightness-110 sm:text-base"
+                >
+                  <SvgIcon name="search" className="h-5 w-5 transition-transform group-hover:scale-110" />
+                  Explorar Habitaciones
+                  <SvgIcon name="arrowDown" className="h-4 w-4 opacity-60" />
+                </button>
+                {habitacionesConTour360 > 0 && (
+                  <button
+                    onClick={scrollAHabitaciones}
+                    className="inline-flex items-center gap-2.5 rounded-2xl border-2 border-brand-orange/40 bg-white/5 px-6 py-3.5 text-sm font-bold text-white backdrop-blur transition-all duration-200 hover:bg-white/10 hover:border-brand-orange sm:text-base"
+                  >
+                    <SvgIcon name="globe" className="h-5 w-5 text-brand-orange" />
+                    Ver Tour 360°
+                  </button>
+                )}
+              </div>
 
               <div className="mt-6 flex flex-wrap gap-2.5 animate-fade-up-delay-3">
                 {[
@@ -296,20 +393,25 @@ function Home() {
                 </button>
               </div>
 
-              <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4">
+              {/* ── 3 Contadores animados ── */}
+              <div className="mt-7 grid grid-cols-3 gap-3 sm:gap-4">
+                <div className="rounded-2xl border border-brand-orange/20 bg-white/5 p-4 backdrop-blur animate-fade-up-delay-1">
+                  <p className="text-xs uppercase tracking-wide text-brand-mist">Total habitaciones</p>
+                  <p className="mt-1 text-2xl font-bold text-white sm:text-3xl">{animTotal}</p>
+                </div>
                 <div className="rounded-2xl border border-brand-orange/20 bg-white/5 p-4 backdrop-blur animate-fade-up-delay-2">
                   <p className="text-xs uppercase tracking-wide text-brand-mist">Disponibles ahora</p>
-                  <p className="mt-1 text-2xl font-bold text-brand-orange">{habitacionesDisponibles}</p>
+                  <p className="mt-1 text-2xl font-bold text-brand-orange sm:text-3xl">{animDisponibles}</p>
                 </div>
                 <div className="rounded-2xl border border-brand-orange/20 bg-white/5 p-4 backdrop-blur animate-fade-up-delay-3">
                   <p className="text-xs uppercase tracking-wide text-brand-mist">Tour Virtual 360°</p>
-                  <p className="mt-1 text-2xl font-bold text-brand-orange">{habitacionesConTour360}</p>
+                  <p className="mt-1 text-2xl font-bold text-brand-orange sm:text-3xl">{animTour360}</p>
                 </div>
               </div>
             </div>
 
             {/* Card info lateral */}
-            <div className="lg:col-span-2">
+            <div className="min-w-0 lg:col-span-2">
               <div className="h-full rounded-3xl border border-brand-orange/20 bg-white/5 p-5 sm:p-6 backdrop-blur-md shadow-2xl animate-fade-up-delay-2">
                 <p className="text-xs uppercase tracking-wider text-brand-orange font-semibold">Experiencia H&H</p>
                 <h3 className="mt-2 text-2xl sm:text-3xl font-black leading-tight">
@@ -338,8 +440,66 @@ function Home() {
         </div>
       </header>
 
+      {/* ── ¿POR QUÉ ELEGIRNOS? ── */}
+      <section className="py-12 sm:py-16 bg-white dark:bg-gray-900 border-b border-slate-100 dark:border-gray-800">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="mb-10 text-center animate-fade-up-delay-1">
+            <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/20 bg-brand-orange/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-orange">
+              <SvgIcon name="star" className="h-3.5 w-3.5" />
+              Nuestras ventajas
+            </span>
+            <h2 className="text-2xl font-extrabold text-brand-charcoal dark:text-gray-100 sm:text-3xl lg:text-4xl">
+              ¿Por qué elegir <span className="text-brand-orange">H&H Residencial</span>?
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-slate-500 dark:text-gray-400 sm:text-base">
+              Más que un alojamiento, una experiencia diseñada para tu comodidad.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: 'home',
+                title: 'Habitaciones Premium',
+                desc: 'Espacios modernos, limpios y confortables pensados para que te sientas como en casa.',
+                delay: 'animate-scale-in-delay-1',
+              },
+              {
+                icon: 'shield',
+                title: 'Reserva Segura',
+                desc: 'Confirmación instantánea y proceso transparente. Tu reserva garantizada.',
+                delay: 'animate-scale-in-delay-2',
+              },
+              {
+                icon: 'globe',
+                title: 'Tour Virtual 360°',
+                desc: 'Recorre las habitaciones antes de reservar. Elige con total confianza.',
+                delay: 'animate-scale-in-delay-3',
+              },
+              {
+                icon: 'star',
+                title: 'Atención Personalizada',
+                desc: 'Servicio 24/7 con un equipo dedicado a hacer tu estadía inolvidable.',
+                delay: 'animate-scale-in-delay-4',
+              },
+            ].map(({ icon, title, desc, delay }) => (
+              <div
+                key={title}
+                className={`group rounded-2xl border border-slate-100 dark:border-gray-700 bg-brand-sand dark:bg-gray-800 p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-brand-orange/30 ${delay}`}
+              >
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-orange/10 text-brand-orange transition-colors group-hover:bg-brand-orange group-hover:text-white">
+                  <SvgIcon name={icon} className="h-6 w-6" />
+                </div>
+                <h3 className="mb-2 text-lg font-bold text-brand-charcoal dark:text-gray-100">{title}</h3>
+                <p className="text-sm text-slate-500 dark:text-gray-400 leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── LISTADO ── */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+      <main ref={habitacionesRef} className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12 scroll-mt-20">
         <div className="animate-fade-up-delay-1">
           <FiltrosHabitaciones onFiltrar={handleFiltrar} filtrosActivos={filtros} />
         </div>
@@ -355,22 +515,32 @@ function Home() {
           </div>
         )}
 
+        {/* ── Skeleton Loader ── */}
         {loading && (
-          <section className="py-16 text-center sm:py-20">
-            <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-brand-orange border-t-transparent sm:h-20 sm:w-20" />
-            <p className="text-base font-semibold text-brand-charcoal dark:text-gray-100 sm:text-lg">Cargando habitaciones...</p>
-            <p className="mt-2 text-sm text-brand-mist">Estamos preparando las mejores opciones para ti.</p>
+          <section className="animate-fade-up-delay-2">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="h-16 w-16 animate-spin rounded-full border-4 border-brand-orange border-t-transparent sm:h-8 sm:w-8" />
+              <div>
+                <p className="text-base font-semibold text-brand-charcoal dark:text-gray-100 sm:text-lg">Cargando habitaciones...</p>
+                <p className="text-sm text-brand-mist">Estamos preparando las mejores opciones para ti.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-7">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
           </section>
         )}
 
         {error && (
-          <section className="rounded-2xl border-2 border-red-200 bg-red-50 p-6 text-center sm:p-8">
+          <section className="rounded-2xl border-2 border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-950/30 p-6 text-center sm:p-8 animate-fade-up-delay-2">
             <div className="mb-4 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
                 <SvgIcon name="exclamation" className="h-8 w-8 text-red-500" />
               </div>
             </div>
-            <p className="mb-4 text-base font-semibold text-red-700 sm:text-lg">{error}</p>
+            <p className="mb-4 text-base font-semibold text-red-700 dark:text-red-400 sm:text-lg">{error}</p>
             <button onClick={() => cargarHabitaciones(filtros)} className="rounded-xl bg-brand-orange px-6 py-3 font-semibold text-white transition hover:brightness-110">
               Reintentar
             </button>
@@ -378,9 +548,11 @@ function Home() {
         )}
 
         {!loading && !error && totalHabitaciones > 0 && (
-          <section className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-7 animate-fade-up-delay-2">
-            {habitaciones.map(habitacion => (
-              <HabitacionCard key={habitacion.id_habitacion} habitacion={habitacion} onReservar={handleReservar} />
+          <section className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 xl:gap-7">
+            {habitaciones.map((habitacion, index) => (
+              <div key={habitacion.id_habitacion} className="animate-fade-up" style={{ animationDelay: `${0.15 + index * 0.08}s` }}>
+                <HabitacionCard habitacion={habitacion} onReservar={handleReservar} />
+              </div>
             ))}
           </section>
         )}
@@ -405,8 +577,8 @@ function Home() {
 
       {/* ── UBICACIÓN ── */}
       <section ref={mapRef} className="mt-16 sm:mt-20 scroll-mt-4">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col items-center text-center">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 flex flex-col items-center text-center animate-fade-up-delay-1">
             <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-orange/20 bg-brand-orange/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-brand-orange">
               <SvgIcon name="mapPin" className="h-3.5 w-3.5" />
               Cómo llegar
@@ -420,7 +592,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="overflow-hidden rounded-3xl border border-brand-mist/30 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-2xl lg:grid lg:grid-cols-5">
 
             {/* Panel izquierdo — foto del edificio con overlay */}
@@ -434,7 +606,7 @@ function Home() {
               <div className="relative flex h-full flex-col justify-between p-7 text-white sm:p-10">
                 <div>
                   <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-orange/20 ring-1 ring-brand-orange/40">
-                    <img src="/logo.png" alt="H&H" className="h-9 w-9 object-contain" />
+                    <img src="/modooscuro.png" alt="H&H" className="h-9 w-9 object-contain" />
                   </div>
                   <h3 className="text-2xl font-black sm:text-3xl">H&H Residencial</h3>
                   <p className="mt-1 text-sm font-medium text-brand-orange">Cochabamba, Bolivia</p>
@@ -484,7 +656,7 @@ function Home() {
             {/* Mapa */}
             <div className="animate-slide-in-right relative lg:col-span-3">
               <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-xl border border-white/60 dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 px-3 py-2 shadow-lg backdrop-blur-sm">
-                <span className="flex h-2.5 w-2.5 rounded-full bg-brand-green ring-2 ring-green-200" />
+                <span className="flex h-2.5 w-2.5 rounded-full bg-brand-green ring-2 ring-green-200 dark:ring-green-900" />
                 <span className="text-xs font-semibold text-brand-charcoal dark:text-gray-200">H&H Residencial</span>
               </div>
               <iframe
@@ -501,18 +673,102 @@ function Home() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="mt-12 bg-brand-slate py-7 text-white sm:mt-14 sm:py-8">
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mb-3 flex items-center justify-center gap-2">
-            <img src="/logo.png" alt="H&H" className="h-8 w-8 object-contain" />
-            <span className="text-base font-bold sm:text-xl">
-              H&H <span className="text-brand-orange">Residencial</span>
-            </span>
+      {/* ── FOOTER MEJORADO ── */}
+      <footer className="mt-12 bg-brand-slate py-10 text-white sm:mt-14 sm:py-14 animate-fade-in-soft">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+
+            {/* Columna 1: Logo + Descripción */}
+            <div>
+              <div className="flex items-center gap-2.5 mb-4">
+                <img src="/modooscuro.png" alt="H&H" className="h-10 w-10 object-contain" />
+                <span className="text-lg font-bold sm:text-xl">
+                  H&H <span className="text-brand-orange">Residencial</span>
+                </span>
+              </div>
+              <p className="text-sm text-brand-mist leading-relaxed max-w-xs">
+                Tu hogar lejos de casa en Cochabamba, Bolivia. Habitaciones modernas, cómodas y con la mejor atención para tu estadía.
+              </p>
+              {/* Redes sociales */}
+              <div className="mt-5 flex gap-3">
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-[#25D366] hover:text-white" aria-label="WhatsApp">
+                  <WhatsAppIcon className="h-4 w-4" />
+                </a>
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-[#1877F2] hover:text-white" aria-label="Facebook">
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-gradient-to-tr hover:from-[#F58529] hover:via-[#DD2A7B] hover:to-[#8134AF]" aria-label="Instagram">
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Columna 2: Enlaces rápidos */}
+            <div>
+              <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-brand-orange">Enlaces Rápidos</h4>
+              <ul className="space-y-2.5">
+                <li>
+                  <button onClick={scrollAHabitaciones} className="text-sm text-brand-mist hover:text-white transition-colors">
+                    Ver Habitaciones
+                  </button>
+                </li>
+                <li>
+                  <button onClick={scrollAlMapa} className="text-sm text-brand-mist hover:text-white transition-colors">
+                    Nuestra Ubicación
+                  </button>
+                </li>
+                <li>
+                  <Link to="/login" className="text-sm text-brand-mist hover:text-white transition-colors">
+                    Iniciar Sesión
+                  </Link>
+                </li>
+                <li>
+                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-mist hover:text-white transition-colors">
+                    Contactar por WhatsApp
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Columna 3: Contacto */}
+            <div>
+              <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-brand-orange">Contacto</h4>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <SvgIcon name="mapPin" className="h-4 w-4 flex-shrink-0 text-brand-orange mt-0.5" />
+                  <span className="text-sm text-brand-mist">Cochabamba, Bolivia</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <SvgIcon name="phone" className="h-4 w-4 flex-shrink-0 text-brand-orange mt-0.5" />
+                  <a href={`tel:+${WHATSAPP_NUMERO}`} className="text-sm text-brand-mist hover:text-white transition-colors">
+                    +{WHATSAPP_NUMERO}
+                  </a>
+                </li>
+                <li className="flex items-start gap-3">
+                  <SvgIcon name="bell" className="h-4 w-4 flex-shrink-0 text-brand-orange mt-0.5" />
+                  <span className="text-sm text-brand-mist">Atención 24/7</span>
+                </li>
+              </ul>
+            </div>
           </div>
-          <p className="text-xs text-brand-mist sm:text-sm">&copy; 2026 H&H Residencial. Todos los derechos reservados.</p>
+
+          {/* Copyright */}
+          <div className="mt-10 border-t border-white/10 pt-6 text-center">
+            <p className="text-xs text-brand-mist sm:text-sm">&copy; 2026 H&H Residencial. Todos los derechos reservados.</p>
+          </div>
         </div>
       </footer>
+
+      {/* ── BOTÓN FLOTANTE WHATSAPP ── */}
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-[0_0_20px_rgba(37,211,102,0.5)] animate-whatsapp-pulse sm:h-16 sm:w-16"
+        aria-label="Contactar por WhatsApp"
+      >
+        <WhatsAppIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+      </a>
 
       {mostrarModalReserva && habitacionSeleccionada && (
         <ModalReserva
@@ -521,7 +777,6 @@ function Home() {
           onSuccess={handleReservaExitosa}
         />
       )}
-    </div>
     </div>
   );
 }

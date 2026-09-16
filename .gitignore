@@ -59,3 +59,6 @@ Thumbs.db
 # ===============================
 pnpm-lock.yaml
 yarn.lock
+# Claude Code worktrees / scratch
+.claude/
+.playwright-mcp/
