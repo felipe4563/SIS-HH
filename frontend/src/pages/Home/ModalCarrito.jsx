@@ -7,6 +7,7 @@ import { calcularPrecioDinamicoMultiple } from '../../services/pricing';
 import { verificarDisponibilidad } from '../../services/habitacion';
 import { iniciarPagoMultiple } from '../../services/pago';
 import CalendarioReserva from './CalendarioReserva';
+import ModalPagoQR from './ModalPagoQR';
 
 const ModalCarrito = ({ onClose }) => {
   const { usuario } = useContext(AuthContext);
@@ -28,6 +29,7 @@ const ModalCarrito = ({ onClose }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mostrarDetalles, setMostrarDetalles] = useState(false);
+  const [pagoQR, setPagoQR] = useState(null);
 
   // Availability per room
   const [disponibilidad, setDisponibilidad] = useState({});
@@ -162,26 +164,19 @@ const ModalCarrito = ({ onClose }) => {
 
       const reservasIds = responseReserva.reservas.map((r) => r.id_reserva);
 
-      // 2️⃣ UN solo pago para TODAS las reservas con el total combinado
+      // 2️⃣ UN solo QR para TODAS las reservas con el total combinado
       const resultadoPago = await iniciarPagoMultiple(reservasIds);
 
-      if (resultadoPago.success && resultadoPago.paymentUrl) {
-        sessionStorage.setItem('pago_pendiente', JSON.stringify({
-          ids_reserva: reservasIds,
-          id_pago: resultadoPago.id_pago,
-          monto_total: resultadoPago.monto_total,
-          timestamp: Date.now(),
-        }));
-
-        limpiarCarrito();
-        onClose();
-
-        setTimeout(() => {
-          alert(`¡${reservasIds.length} ${reservasIds.length === 1 ? 'reserva creada' : 'reservas creadas'}! Serás redirigido al portal de pagos para completar el pago total.`);
-          window.location.href = resultadoPago.paymentUrl;
-        }, 400);
+      if (resultadoPago.success && resultadoPago.qrImage) {
+        setPagoQR({
+          idReserva: reservasIds[0],
+          idsReserva: reservasIds,
+          qrImage: resultadoPago.qrImage,
+          fechaExpiracion: resultadoPago.fecha_expiracion,
+          monto: resultadoPago.monto_total,
+        });
       } else {
-        setError('Reservas creadas pero no se pudo iniciar el pago. Ve a "Mis Reservas" para completar el pago.');
+        setError('Reservas creadas pero no se pudo generar el QR de pago. Ve a "Mis Reservas" para completar el pago.');
       }
     } catch (err) {
       console.error('Error:', err);
@@ -193,6 +188,23 @@ const ModalCarrito = ({ onClose }) => {
 
   const cargando = verificando || calculandoPrecios;
   const canSubmit = !loading && !cargando && todasDisponibles && preciosDinamicos.length > 0 && habitaciones.length > 0;
+
+  if (pagoQR) {
+    return (
+      <ModalPagoQR
+        idReserva={pagoQR.idReserva}
+        qrImage={pagoQR.qrImage}
+        fechaExpiracion={pagoQR.fechaExpiracion}
+        monto={pagoQR.monto}
+        onRegenerar={() => iniciarPagoMultiple(pagoQR.idsReserva)}
+        onSuccess={() => {
+          limpiarCarrito();
+          onClose();
+        }}
+        onClose={onClose}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
