@@ -62,3 +62,10 @@ yarn.lock
 # Claude Code worktrees / scratch
 .claude/
 .playwright-mcp/
+
+# Migraciones locales (no se suben)
+bd/migraciones/
+
+# Uploads de usuarios (no subir nuevos)
+backend/uploads/**
+!backend/uploads/.gitkeep
