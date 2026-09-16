@@ -186,7 +186,11 @@ CREATE TABLE `pago` (
   `id_reserva` int(11) NOT NULL,
   `monto` decimal(10,2) NOT NULL,
   `fecha_pago` datetime DEFAULT current_timestamp(),
-  `metodo_pago` enum('efectivo','tarjeta','transferencia') DEFAULT 'efectivo'
+  `metodo_pago` enum('efectivo','tarjeta','transferencia','qr') DEFAULT 'efectivo',
+  `estado_pago` enum('pendiente','aprobado','rechazado','expirado') DEFAULT 'pendiente',
+  `transaccion_id` varchar(100) DEFAULT NULL,
+  `datos_transaccion` text DEFAULT NULL,
+  `fecha_expiracion` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
