@@ -14,19 +14,36 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar {
+/* Scrollbar — discreto en ambos modos */
+::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
-.dark ::-webkit-scrollbar-track {
-  background: #111827;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
 .dark ::-webkit-scrollbar-thumb {
   background: #374151;
-  border-radius: 4px;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
+}
+.dark {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
 }
 
 /* Selection color */

@@ -83,24 +83,24 @@ const MiPerfil = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-amber-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-colors">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white dark:from-gray-900 dark:to-gray-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Link 
-            to="/" 
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 dark:from-[#0F172A] dark:to-[#1E3A8A] text-white transition-colors duration-300">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+          <Link
+            to="/"
             className="inline-flex items-center text-blue-100 hover:text-white transition-colors mb-4"
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Volver al inicio
           </Link>
-          <div className="flex items-center space-x-4">
-            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-              <span className="text-5xl">👤</span>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <span className="text-4xl sm:text-5xl">👤</span>
             </div>
-            <div>
-              <h1 className="text-4xl font-extrabold mb-1">Mi Perfil</h1>
-              <p className="text-blue-100">Actualiza tu información personal</p>
+            <div className="min-w-0">
+              <h1 className="text-3xl sm:text-4xl font-extrabold mb-1">Mi Perfil</h1>
+              <p className="text-blue-100 text-sm sm:text-base">Actualiza tu información personal</p>
             </div>
           </div>
         </div>
