@@ -6,6 +6,7 @@ import { crearReserva } from '../../services/reserva';
 import { calcularPrecioDinamico } from '../../services/pricing';
 import { iniciarPago } from '../../services/pago'; // 👈 NUEVO IMPORT
 import CalendarioReserva from './CalendarioReserva';
+import ModalPagoQR from './ModalPagoQR';
 
 const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
   const { usuario } = useContext(AuthContext);
@@ -17,6 +18,7 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
   const [verificando, setVerificando] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pagoQR, setPagoQR] = useState(null);
   
   const capacidad = habitacion.tipo.capacidad;
   const [cantidadAdultos, setCantidadAdultos] = useState(1);
@@ -158,36 +160,20 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
       console.log('✅ Reserva creada:', responseReserva);
       const idReserva = responseReserva.id_reserva;
 
-      // 2️⃣ INICIAR EL PAGO INMEDIATAMENTE
-      console.log('💳 Paso 2: Iniciando proceso de pago...');
+      // 2️⃣ GENERAR EL QR DE PAGO
+      console.log('💳 Paso 2: Generando QR de pago...');
       const resultadoPago = await iniciarPago(idReserva);
 
-      if (resultadoPago.success && resultadoPago.paymentUrl) {
-        console.log('🔗 Link de pago generado:', resultadoPago.paymentUrl);
-        
-        // Guardar info para cuando regrese
-        sessionStorage.setItem('pago_pendiente', JSON.stringify({
-          id_reserva: idReserva,
-          id_pago: resultadoPago.id_pago,
-          timestamp: new Date().getTime()
-        }));
-
-        // 3️⃣ REDIRIGIR A RED ENLACE
-        console.log('🚀 Paso 3: Redirigiendo a Red Enlace...');
-        
-        // Cerrar modal y notificar éxito
-        onSuccess();
-        onClose();
-        
-        // Pequeña pausa para que el usuario vea que se procesó
-        setTimeout(() => {
-          alert('¡Reserva creada! Serás redirigido al portal de pagos.');
-          window.location.href = resultadoPago.paymentUrl;
-        }, 500);
-        
+      if (resultadoPago.success && resultadoPago.qrImage) {
+        setPagoQR({
+          idReserva,
+          qrImage: resultadoPago.qrImage,
+          fechaExpiracion: resultadoPago.fecha_expiracion,
+          monto: resultadoPago.monto,
+        });
       } else {
-        setError('Reserva creada pero no se pudo iniciar el pago. Ve a "Mis Reservas" para completar el pago.');
-        console.error('Error al generar link de pago:', resultadoPago);
+        setError('Reserva creada pero no se pudo generar el QR de pago. Ve a "Mis Reservas" para completar el pago.');
+        console.error('Error al generar QR de pago:', resultadoPago);
       }
 
     } catch (err) {
@@ -210,6 +196,23 @@ const ModalReserva = ({ habitacion, onClose, onSuccess }) => {
     if (valor < 0) return 'text-green-600';
     return 'text-gray-600';
   };
+
+  if (pagoQR) {
+    return (
+      <ModalPagoQR
+        idReserva={pagoQR.idReserva}
+        qrImage={pagoQR.qrImage}
+        fechaExpiracion={pagoQR.fechaExpiracion}
+        monto={pagoQR.monto}
+        onRegenerar={() => iniciarPago(pagoQR.idReserva)}
+        onSuccess={() => {
+          onSuccess();
+          onClose();
+        }}
+        onClose={onClose}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
