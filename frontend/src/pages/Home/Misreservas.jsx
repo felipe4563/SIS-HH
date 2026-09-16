@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import { obtenerMisReservas, cancelarReserva } from '../../services/reserva.js';
 import { iniciarPago } from '../../services/pago.js';
+import ModalPagoQR from './ModalPagoQR';
 
 const MisReservas = () => {
   const { usuario } = useContext(AuthContext);
@@ -11,6 +12,7 @@ const MisReservas = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [procesandoPago, setProcesandoPago] = useState(null);
+  const [pagoQR, setPagoQR] = useState(null);
 
   useEffect(() => {
     if (!usuario || usuario.tipo !== 'cliente') {
@@ -38,15 +40,15 @@ const MisReservas = () => {
     setProcesandoPago(id_reserva);
     try {
       const resultado = await iniciarPago(id_reserva);
-      if (resultado.success && resultado.paymentUrl) {
-        sessionStorage.setItem('pago_pendiente', JSON.stringify({
-          id_reserva,
-          id_pago: resultado.id_pago,
-          timestamp: Date.now(),
-        }));
-        window.location.href = resultado.paymentUrl;
+      if (resultado.success && resultado.qrImage) {
+        setPagoQR({
+          idReserva: id_reserva,
+          qrImage: resultado.qrImage,
+          fechaExpiracion: resultado.fecha_expiracion,
+          monto: resultado.monto,
+        });
       } else {
-        alert('No se pudo generar el enlace de pago. Intenta de nuevo.');
+        alert('No se pudo generar el QR de pago. Intenta de nuevo.');
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Error al iniciar el pago');
@@ -328,6 +330,21 @@ const MisReservas = () => {
           </>
         )}
       </div>
+
+      {pagoQR && (
+        <ModalPagoQR
+          idReserva={pagoQR.idReserva}
+          qrImage={pagoQR.qrImage}
+          fechaExpiracion={pagoQR.fechaExpiracion}
+          monto={pagoQR.monto}
+          onRegenerar={() => iniciarPago(pagoQR.idReserva)}
+          onSuccess={() => {
+            setPagoQR(null);
+            cargarReservas();
+          }}
+          onClose={() => setPagoQR(null)}
+        />
+      )}
     </div>
   );
 };
