@@ -29,9 +29,11 @@ export const iniciarPagoMultiple = async (ids_reserva) => {
 };
 
 export const verificarEstadoPago = async (id_reserva) => {
+  const token = localStorage.getItem('token');
   const response = await axios.get(
-    `${API_URL}/api/pagos/estado/${id_reserva}`
+    `${API_URL}/api/pagos/estado/${id_reserva}`,
+    { headers: { 'Authorization': `Bearer ${token}` } }
   );
-  
+
   return response.data;
 };

@@ -175,6 +175,10 @@ const ModalCarrito = ({ onClose }) => {
           fechaExpiracion: resultadoPago.fecha_expiracion,
           monto: resultadoPago.monto_total,
         });
+        // Las reservas ya fueron creadas en el paso 1; limpiar el carrito ahora
+        // evita que cerrar el modal de QR sin pagar deje habitaciones "fantasma"
+        // en el carrito que generarían reservas duplicadas al reintentar.
+        limpiarCarrito();
       } else {
         setError('Reservas creadas pero no se pudo generar el QR de pago. Ve a "Mis Reservas" para completar el pago.');
       }

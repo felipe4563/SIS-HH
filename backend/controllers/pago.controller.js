@@ -38,6 +38,45 @@ export const iniciarPago = async (req, res) => {
       });
     }
 
+    // Evitar que una reserva ya cubierta por un pago combinado (carrito) genere
+    // un segundo QR independiente y pagable (riesgo de doble cobro).
+    const [pagosActivos] = await db.query(
+      `SELECT id_pago, id_reserva as id_reserva_primaria, datos_transaccion
+       FROM pago
+       WHERE metodo_pago = 'qr' AND estado_pago IN ('pendiente', 'aprobado') AND datos_transaccion IS NOT NULL`
+    );
+
+    const pagoCombinadoExistente = pagosActivos.find((p) => {
+      try {
+        const datos = JSON.parse(p.datos_transaccion);
+        return Array.isArray(datos.ids_reserva_todas) &&
+          datos.ids_reserva_todas.map(Number).includes(Number(id_reserva)) &&
+          p.id_reserva_primaria !== Number(id_reserva);
+      } catch {
+        return false;
+      }
+    });
+
+    if (pagoCombinadoExistente) {
+      return res.status(400).json({
+        message: `Esta reserva forma parte de un pago combinado. Continúa el pago desde la reserva #${pagoCombinadoExistente.id_reserva_primaria}.`,
+      });
+    }
+
+    // Evitar QRs duplicados vivos para la misma reserva (doble-clic, doble pestaña, etc.)
+    const [pagosExistentes] = await db.query(
+      `SELECT id_pago, transaccion_id FROM pago
+       WHERE id_reserva = ? AND metodo_pago = 'qr' AND estado_pago = 'pendiente'
+         AND fecha_expiracion > NOW()
+       ORDER BY id_pago DESC LIMIT 1`,
+      [id_reserva]
+    );
+
+    if (pagosExistentes.length > 0) {
+      await QrBanecoService.cancelarQR(pagosExistentes[0].transaccion_id);
+      await db.query(`UPDATE pago SET estado_pago = 'expirado' WHERE id_pago = ?`, [pagosExistentes[0].id_pago]);
+    }
+
     const descripcion = `Reserva #${id_reserva} - ${reserva.tipo_habitacion} Hab. ${reserva.numero_habitacion}`;
 
     console.log('📋 Generando QR de pago para reserva:', {
@@ -77,7 +116,7 @@ export const iniciarPago = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error al iniciar pago:', error);
+    console.error('❌ Error al iniciar pago:', error.message);
     res.status(500).json({
       message: error.message || 'Error al procesar el pago'
     });
@@ -125,6 +164,20 @@ export const iniciarPagoMultiple = async (req, res) => {
     const montoTotal = reservas.reduce((sum, r) => sum + parseFloat(r.total), 0);
     const cliente = reservas[0];
 
+    // Evitar QRs duplicados vivos para el mismo carrito (doble-clic, doble pestaña, etc.)
+    const [pagosExistentes] = await db.query(
+      `SELECT id_pago, transaccion_id FROM pago
+       WHERE id_reserva = ? AND metodo_pago = 'qr' AND estado_pago = 'pendiente'
+         AND fecha_expiracion > NOW()
+       ORDER BY id_pago DESC LIMIT 1`,
+      [ids_reserva[0]]
+    );
+
+    if (pagosExistentes.length > 0) {
+      await QrBanecoService.cancelarQR(pagosExistentes[0].transaccion_id);
+      await db.query(`UPDATE pago SET estado_pago = 'expirado' WHERE id_pago = ?`, [pagosExistentes[0].id_pago]);
+    }
+
     const habitacionesStr = reservas.map((r) => `Hab. ${r.numero_habitacion}`).join(', ');
     const descripcion = `${ids_reserva.length} habitaciones (${habitacionesStr}) - ${cliente.nombre} ${cliente.apellido}`;
 
@@ -161,10 +214,10 @@ export const iniciarPagoMultiple = async (req, res) => {
       fecha_expiracion: resultado.fechaExpiracion,
       id_pago: resultPago.insertId,
       ids_reserva,
-      monto_total: montoTotal,
+      monto_total: Number(montoTotal.toFixed(2)),
     });
   } catch (error) {
-    console.error('❌ Error al iniciar pago múltiple:', error);
+    console.error('❌ Error al iniciar pago múltiple:', error.message);
     res.status(500).json({ message: error.message || 'Error al procesar el pago' });
   }
 };
@@ -178,7 +231,7 @@ export const verificarEstadoPago = async (req, res) => {
 
   try {
     const [pagos] = await db.query(
-      `SELECT p.*, r.estado as estado_reserva, r.total as monto_reserva
+      `SELECT p.*, r.estado as estado_reserva, r.total as monto_reserva, r.id_cliente
        FROM pago p
        INNER JOIN reserva r ON p.id_reserva = r.id_reserva
        WHERE p.id_reserva = ?
@@ -194,6 +247,10 @@ export const verificarEstadoPago = async (req, res) => {
     }
 
     const pago = pagos[0];
+
+    if (req.usuario.id_cliente && req.usuario.id_cliente !== pago.id_cliente) {
+      return res.status(403).json({ message: 'No tienes permiso para ver este pago' });
+    }
 
     if (pago.metodo_pago === 'qr' && pago.estado_pago === 'pendiente') {
       const yaVencio = pago.fecha_expiracion && new Date(pago.fecha_expiracion) < new Date();
@@ -243,7 +300,7 @@ export const verificarEstadoPago = async (req, res) => {
     res.json(pago);
 
   } catch (error) {
-    console.error('❌ Error al verificar estado:', error);
+    console.error('❌ Error al verificar estado:', error.message);
     res.status(500).json({
       message: 'Error al verificar estado del pago'
     });

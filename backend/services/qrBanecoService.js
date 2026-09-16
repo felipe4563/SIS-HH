@@ -20,11 +20,15 @@ export class QrBanecoService {
    * el algoritmo localmente. Es un GET con query params, y devuelve texto plano.
    */
   static async encriptar(texto) {
-    const config = this.getConfig();
-    const response = await axios.get(`${config.baseUrl}/api/authentication/encrypt`, {
-      params: { text: texto, aesKey: config.aesKey },
-    });
-    return typeof response.data === 'string' ? response.data.trim() : String(response.data);
+    try {
+      const config = this.getConfig();
+      const response = await axios.get(`${config.baseUrl}/api/authentication/encrypt`, {
+        params: { text: texto, aesKey: config.aesKey },
+      });
+      return typeof response.data === 'string' ? response.data.trim() : String(response.data);
+    } catch (err) {
+      throw new Error(err.response?.data?.message || err.message);
+    }
   }
 
   static decodificarExpiracionToken(token) {
@@ -50,18 +54,25 @@ export class QrBanecoService {
     const config = this.getConfig();
     const passwordCifrado = await this.encriptar(config.password);
 
-    const response = await axios.post(`${config.baseUrl}/api/authentication/authenticate`, {
-      userName: config.user,
-      password: passwordCifrado,
-    });
+    try {
+      const response = await axios.post(`${config.baseUrl}/api/authentication/authenticate`, {
+        userName: config.user,
+        password: passwordCifrado,
+      });
 
-    if (response.data.responseCode !== 0) {
-      throw new Error(response.data.message || 'Error al autenticar con Banco Económico');
+      if (response.data.responseCode !== 0) {
+        throw new Error(response.data.message || 'Error al autenticar con Banco Económico');
+      }
+
+      cachedToken = response.data.token;
+      tokenExpiresAt = this.decodificarExpiracionToken(cachedToken);
+      return cachedToken;
+    } catch (err) {
+      if (err.response) {
+        throw new Error(err.response?.data?.message || err.message);
+      }
+      throw err;
     }
-
-    cachedToken = response.data.token;
-    tokenExpiresAt = this.decodificarExpiracionToken(cachedToken);
-    return cachedToken;
   }
 
   /**
@@ -82,30 +93,37 @@ export class QrBanecoService {
       desc = desc.substring(0, 200);
     }
 
-    const response = await axios.post(
-      `${config.baseUrl}/api/qrsimple/generateQR`,
-      {
-        transactionId: String(transactionId),
-        accountCredit: accountCreditCifrado,
-        currency: 'BOB',
-        amount: parseFloat(monto),
-        description: desc,
-        dueDate,
-        singleUse: true,
-        modifyAmount: false,
-      },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    try {
+      const response = await axios.post(
+        `${config.baseUrl}/api/qrsimple/generateQR`,
+        {
+          transactionId: String(transactionId),
+          accountCredit: accountCreditCifrado,
+          currency: 'BOB',
+          amount: parseFloat(monto),
+          description: desc,
+          dueDate,
+          singleUse: true,
+          modifyAmount: false,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-    if (response.data.responseCode !== 0) {
-      throw new Error(response.data.message || 'Error al generar el QR');
+      if (response.data.responseCode !== 0) {
+        throw new Error(response.data.message || 'Error al generar el QR');
+      }
+
+      return {
+        qrId: response.data.qrId,
+        qrImage: response.data.qrImage,
+        fechaExpiracion: new Date(Date.now() + 20 * 60 * 1000),
+      };
+    } catch (err) {
+      if (err.response) {
+        throw new Error(err.response?.data?.message || err.message);
+      }
+      throw err;
     }
-
-    return {
-      qrId: response.data.qrId,
-      qrImage: response.data.qrImage,
-      fechaExpiracion: new Date(Date.now() + 20 * 60 * 1000),
-    };
   }
 
   /**
@@ -117,22 +135,29 @@ export class QrBanecoService {
     const config = this.getConfig();
     const token = await this.autenticar();
 
-    const response = await axios.get(`${config.baseUrl}/api/qrsimple/v2/statusQR/${qrId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const response = await axios.get(`${config.baseUrl}/api/qrsimple/v2/statusQR/${qrId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    if (response.data.responseCode !== 0) {
-      throw new Error(response.data.message || 'Error al consultar el estado del QR');
+      if (response.data.responseCode !== 0) {
+        throw new Error(response.data.message || 'Error al consultar el estado del QR');
+      }
+
+      const pagos = Array.isArray(response.data.payment)
+        ? response.data.payment
+        : (response.data.payment ? [response.data.payment] : []);
+
+      return {
+        statusQrCode: response.data.statusQrCode,
+        pago: pagos[0] || null,
+      };
+    } catch (err) {
+      if (err.response) {
+        throw new Error(err.response?.data?.message || err.message);
+      }
+      throw err;
     }
-
-    const pagos = Array.isArray(response.data.payment)
-      ? response.data.payment
-      : (response.data.payment ? [response.data.payment] : []);
-
-    return {
-      statusQrCode: response.data.statusQrCode,
-      pago: pagos[0] || null,
-    };
   }
 
   /**
